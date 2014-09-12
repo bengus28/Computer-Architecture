@@ -96,8 +96,15 @@ Memory::Memory()  //Initialize memory
 	load_code(0x01200000);
 	load_code(0x04000000);
 	load_code(0x01200001);
-	load_code(0x03000000);
+	load_code(0x04000000);
+	load_code(0x01200002);
+	load_code(0x01200000);
+	load_code(0x04000000);
 	load_code(0x01200003);
+	load_code(0x03000000);
+	load_code(0x03000000);
+	load_code(0x02000000);
+	load_code(0x05000000);	
 	load_data(0x00200000,3);
 	load_data(0x00200001,7);
 	load_data(0x00200002,5);
@@ -264,10 +271,10 @@ void Memory::print_memory()
 	cout <<	"==========================" << endl;
 //stack
 	memory_index = 0;
-	cout <<	"==== STACK ======================" << endl;
+	cout <<	"==== STACK ========================================================" << endl;
 	while (memory_index < STACK_LENGTH)
 	{
-		cout << "  " << stack_segment[memory_index] << endl;
+		cout << "  " << std::dec << stack_segment[memory_index] << endl;
 		memory_index++;
 	}
 	cout <<	"==========================" << endl;

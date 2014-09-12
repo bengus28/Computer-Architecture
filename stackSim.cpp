@@ -43,12 +43,63 @@ Sim::Sim()
 
 void Sim::run()
 {
-	load_next_instruction();
-	cout << instruction_op() << " mem " << instruction_memory_address() << endl;
-	load_next_instruction();
-	cout << instruction_op() << " mem " << instruction_memory_address() << endl;
-	load_next_instruction();
-	cout << instruction_op() << " mem " << instruction_memory_address() << endl;
+	bool more_instructions = true;
+	while(more_instructions)
+	{
+		load_next_instruction();
+		//cout << instruction_op() << " mem " << instruction_memory_address() << endl;
+		
+		switch(instruction_op())
+		{
+			case 1:	//PUSH
+			{
+				mem_addr *data = mem->read(instruction_memory_address());
+				mem->write(top_of_stack, *data);
+				top_of_stack++;
+				break;
+			}
+			case 2:	//POP
+			{
+				top_of_stack--;
+				mem_addr *data = mem->read(top_of_stack);
+				cout << std::dec << *data << " was poped from the top of the sack." <<endl;
+				break;
+			}
+			case 3: //ADD
+			{
+				top_of_stack--;
+				mem_addr *first_data = mem->read(top_of_stack);
+				top_of_stack--;
+				mem_addr *second_data = mem->read(top_of_stack);
+				mem_addr result = *first_data + *second_data;
+				mem->write(top_of_stack, result);
+				top_of_stack++;
+				break;
+			}
+			case 4:	//MULT
+			{
+				top_of_stack--;
+				mem_addr *first_data = mem->read(top_of_stack);
+				top_of_stack--;
+				mem_addr *second_data = mem->read(top_of_stack);
+				mem_addr result = *first_data * *second_data;
+				mem->write(top_of_stack, result);
+				top_of_stack++;
+				break;
+			}
+			case 5:	//END
+			{
+				more_instructions = false;
+				cout << "Goodbye: Program is ending." << endl;
+				break;
+			}
+			default:
+				cout << "Error: There was an error with the execution of loaded instructions." << endl;
+				break;
+		}
+		//mem->print_memory();
+		//more_instructions = false;
+	}
 }
 
 int Sim::instruction_op()
@@ -77,8 +128,8 @@ mem_addr Sim::instruction_memory_address()
 void Sim::load_next_instruction()
 {
 	current_instruction = mem->read(pc);
-	cout << "Loaded instruction" << endl;
-	cout << std::hex << (int) *current_instruction << endl;
+	//cout << "Loaded instruction" << endl;
+	//cout << std::hex << (int) *current_instruction << endl;
 	pc++;
 }
 
