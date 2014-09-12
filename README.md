@@ -38,7 +38,7 @@ Stack Machine
 
 Open up the terminal navigate to this project and run:
 	
-	"$ make -f StackMakefile".
+	$ make -f StackMakefile
 
 You should see this:
 
@@ -46,7 +46,8 @@ You should see this:
 >g++ stackSim.cpp -o stackSimulator.o
 
 Run: 
-	"$ ./stackSimulator.o"
+
+	$ ./stackSimulator.o
 
 You should see this: (With original code)
 
@@ -55,7 +56,7 @@ You should see this: (With original code)
 
 Once you are done run:
 	
-	"$ make -f StackMakefile clean"
+	$ make -f StackMakefile clean
 
 This will clean up the folder.
 
@@ -67,7 +68,7 @@ Accumulator
 
 Open up the terminal navigate to this project and run:
 	
-	"$ make -f AccumMakefile".
+	$ make -f AccumMakefile
 
 You should see this:
 
@@ -75,7 +76,7 @@ You should see this:
 >g++ accumSim.cpp -o accumSimulator.o
 
 Run:
-	"$ ./accumSimulator.o"
+	$ ./accumSimulator.o
 
 You should see this: (With original code)
 
@@ -83,7 +84,7 @@ You should see this: (With original code)
 >Goodbye: Program is ending.
 
 Once you are done run:
-	"$ make -f AccumMakefile clean"
+	$ make -f AccumMakefile clean
 
 This will clean up the folder.
 
