@@ -1,5 +1,5 @@
 /*******
-	Stack Machine Simulation
+	Accumulator Machine Simulation
 	09/07/14
 	Ben Gustafson
 	COMP 4300
