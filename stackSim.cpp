@@ -15,15 +15,15 @@ using namespace std;
 class Sim
 {
 public:
-	Sim();
-	void run();
+	Sim();											//Sets internal values, and initilizes Memory
+	void run();										//This is where the fun is
 private:
-	int instruction_op();
-	mem_addr instruction_memory_address();
-	void load_next_instruction();
-	mem_addr top_of_stack;
-	mem_addr pc;
-	instruction *current_instruction;
+	int instruction_op();							//gives the op code of the internal current_instruction
+	mem_addr instruction_memory_address();			//gives the memory address of the internal current_instruction
+	void load_next_instruction();					//Loads next instruction based on pc
+	mem_addr top_of_stack;							//Points to the current OPEN spot on top of stack
+	mem_addr pc;									//Program counter, keeps up with where program is in memory
+	instruction *current_instruction;				//Pointer to current instruction
 	Memory *mem;
 };
 

@@ -15,9 +15,6 @@
 
 using namespace std;
 
-
-
-
 /*******
 	Data Structures
 ********/
@@ -49,37 +46,6 @@ private:
 	int text_next_open_memory_location;								//Internal counter for text_segment
 };
 
-/*
-int main()
-{
-	Memory *mem = new Memory();
-	
-	mem->load_code(0x01200000);
-	mem->load_code(0x01200000);
-	mem->load_code(0x04000000);
-	mem->load_code(0x01200001);
-	mem->load_code(0x03000000);
-	mem->load_code(0x01200003);
-	mem->load_data(0x00200000,3);
-	mem->load_data(0x00200001,7);
-	mem->load_data(0x00200002,5);
-	mem->load_data(0x00200003,4);
-	mem->print_memory();
-	
-	cout << "-- Read from memory" << endl;
-	mem_addr *memory_returned;
-	memory_returned = mem->read(0x00200000);
-	cout << std::hex << (int) *memory_returned << endl;
-	memory_returned = mem->read(0x00200001);
-	cout << std::hex << (int) *memory_returned << endl;
-	memory_returned = mem->read(0x00200002);
-	cout << std::hex << (int) *memory_returned << endl;
-	memory_returned = mem->read(0x00200003);
-	cout << std::hex << (int) *memory_returned << endl;
-	
-	return 0;
-}
-*/
 
 /*******
 	Class Definition 
@@ -192,7 +158,7 @@ mem_addr * Memory::read(mem_addr memory_address_in )
 	case 1:
 		{
 			int memory_index = (int) decode_address_index(memory_copy_index);									
-			if (memory_index < TEXT_LENGTH)											//Checks memory length
+			if (memory_index < TEXT_LENGTH)											//Checks text memory length
 			{
 				return &text_segment[memory_index];
 			}
@@ -201,7 +167,7 @@ mem_addr * Memory::read(mem_addr memory_address_in )
 	case 2:
 		{
 			int memory_index = (int) decode_address_index(memory_copy_index);
-			if (text_next_open_memory_location < DATA_LENGTH)						//Checks memory length
+			if (text_next_open_memory_location < DATA_LENGTH)						//Checks data memory length
 			{
 				return &data_segment[memory_index];									
 			}
@@ -210,7 +176,7 @@ mem_addr * Memory::read(mem_addr memory_address_in )
 	case 3:
 		{
 			int memory_index = (int) decode_address_index(memory_copy_index);
-			if (text_next_open_memory_location < STACK_LENGTH)						//Checks memory length
+			if (text_next_open_memory_location < STACK_LENGTH)						//Checks stack memory length
 			{
 				return &stack_segment[memory_index];									
 			}
@@ -226,31 +192,28 @@ mem_addr * Memory::read(mem_addr memory_address_in )
 }
 
 //General funciton to decode the memory addresses coming in and give the correct "bin" where it is stored
-//(-1) -- false
-// 0--kernal
-// 1--text
-// 2--data
-// 3--stack
+
 int Memory::decode_address_bin(mem_addr memory_address_in)
-{
-	//cout << "--bin--" << endl;
-	//cout << std::hex << memory_address_in << endl;
+{																//Removes (potentioal) op code, memory values
 	memory_address_in = memory_address_in << 7;
-	//cout << std::hex << memory_address_in << endl;
 	memory_address_in = memory_address_in >> 27;
-	//cout << std::hex << memory_address_in << endl;
 	return memory_address_in;
+	//(-1) -- false
+	// 0--kernal
+	// 1--text
+	// 2--data
+	// 3--stack
 }
 
 int Memory::decode_address_index(mem_addr memory_address_in)
-{
-	memory_address_in = memory_address_in << 15;
+{																//Removes op and bin vlaues, resets memory 
+	memory_address_in = memory_address_in << 15;	
 	memory_address_in = memory_address_in >> 15;
 	return memory_address_in;
 }
 
 void Memory::print_memory()
-{
+{																//Print current context of memory
 //text
 	int memory_index = 0;
 	cout <<	"==== TEXT ======================" << endl;
