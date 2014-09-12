@@ -1,0 +1,17 @@
+# Ben Gustafson
+# Computer Architecture COMP 4200
+# Stack Machine
+CC=g++
+CFLAGS=-c
+
+all: stackSimulator.o
+
+stackSimulator.o:  stackMem.o stackSim.cpp
+	$(CC) stackSim.cpp -o stackSimulator.o
+
+stackMem.o: stackMem.cpp
+	$(CC) $(CFLAGS) stackMem.cpp -o stackMem.o
+
+clean:
+	rm stackSimulator.o stackMem.o 
+	
