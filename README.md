@@ -45,7 +45,8 @@ You should see this:
 >g++ -c stackMem.cpp -o stackMem.o <br/>
 >g++ stackSim.cpp -o stackSimulator.o
 
-Run "$ ./stackSimulator.o"
+Run 
+	"$ ./stackSimulator.o"
 
 You should see this: (With original code)
 
@@ -78,10 +79,11 @@ Run
 
 You should see this: (With original code)
 
->82 is in the internal_register. <br/>
+>82 is in the internal register. <br/>
 >Goodbye: Program is ending.
 
-Once you are done run "$ make -f AccumMakefile clean"
+Once you are done run:
+	"$ make -f AccumMakefile clean"
 
 This will clean up the folder.
 
