@@ -45,7 +45,7 @@ You should see this:
 >g++ -c stackMem.cpp -o stackMem.o <br/>
 >g++ stackSim.cpp -o stackSimulator.o
 
-Run 
+Run: 
 	"$ ./stackSimulator.o"
 
 You should see this: (With original code)
@@ -74,7 +74,7 @@ You should see this:
 >g++ -c accumMem.cpp -o accumMem.o <br/>
 >g++ accumSim.cpp -o accumSimulator.o
 
-Run 
+Run:
 	"$ ./accumSimulator.o"
 
 You should see this: (With original code)
