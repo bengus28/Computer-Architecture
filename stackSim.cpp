@@ -47,7 +47,7 @@ void Sim::run()
 	while(more_instructions)
 	{
 		load_next_instruction();
-		//cout << instruction_op() << " mem " << instruction_memory_address() << endl;
+		cout << instruction_op() << " mem " << instruction_memory_address() << endl;
 		
 		switch(instruction_op())
 		{
@@ -97,8 +97,8 @@ void Sim::run()
 				cout << "Error: There was an error with the execution of loaded instructions." << endl;
 				break;
 		}
-		//mem->print_memory();
-		//more_instructions = false;
+		mem->print_memory();
+		more_instructions = false;
 	}
 }
 
