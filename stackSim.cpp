@@ -62,7 +62,7 @@ void Sim::run()
 			{
 				top_of_stack--;
 				mem_addr *data = mem->read(top_of_stack);
-				cout << std::dec << *data << " was poped from the top of the sack." <<endl;
+				cout << std::dec << *data << " was popped from the top of the sack." <<endl;
 				break;
 			}
 			case 3: //ADD
