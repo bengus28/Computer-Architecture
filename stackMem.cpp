@@ -28,6 +28,7 @@ mem_addr text_top = 0x00100000;
 mem_addr data_top = 0x00200000;
 mem_addr stack_top = 0x00300000;
 
+//Kernal data starts at mem_addr 0, ommited because we don't use it in this simulation
 instruction text_segment[TEXT_LENGTH];
 mem_addr data_segment[DATA_LENGTH];
 mem_addr stack_segment[STACK_LENGTH];
@@ -40,14 +41,15 @@ public:
 	bool load_code(mem_addr memory_address_in);						//Loads from .text section
 	bool load_data(mem_addr memory_address_in, mem_addr data);		//Loads from .data section
     bool write(mem_addr memory_address_in, mem_addr data);			//Writes to stack section
-    mem_addr * read(mem_addr memory_address_in);						//Reads based on memory address
+    mem_addr * read(mem_addr memory_address_in);					//Reads based on given memory address
     void print_memory();											//Prints out current memory state
 private:
-	int decode_address_bin(mem_addr memory_address_in);
-	int decode_address_index(mem_addr memory_address_in);
-	int text_next_open_memory_location;
+	int decode_address_bin(mem_addr memory_address_in);				//Helps decode address into bin
+	int decode_address_index(mem_addr memory_address_in);			//Helps decode address into array index
+	int text_next_open_memory_location;								//Internal counter for text_segment
 };
 
+/*
 int main()
 {
 	Memory *mem = new Memory();
@@ -77,14 +79,29 @@ int main()
 	
 	return 0;
 }
+*/
+
 /*******
 	Class Definition 
 ********/
 
 Memory::Memory()  //Initialize memory
 {
-	//Kernal data starts at mem_addr 0, ommited because we don't use it in this simulation
 	text_next_open_memory_location = -1;
+	/**
+		TODO: parse file and loade code and data
+	**/
+
+	load_code(0x01200000);
+	load_code(0x01200000);
+	load_code(0x04000000);
+	load_code(0x01200001);
+	load_code(0x03000000);
+	load_code(0x01200003);
+	load_data(0x00200000,3);
+	load_data(0x00200001,7);
+	load_data(0x00200002,5);
+	load_data(0x00200003,4);	
 }
 
 
@@ -98,6 +115,7 @@ bool Memory::load_code(mem_addr memory_address_in)
 	}
 	else
 	{		
+		cout << "Error: Please expand space for Text Memory." << endl;
 		return false;														//No More memory open
 	}
 }
@@ -114,7 +132,8 @@ bool Memory::load_data(mem_addr memory_address_in, mem_addr data)
 		return true;
 	}
 	else
-	{		
+	{	
+		cout << "Error: Please expand space for Data Memory." << endl;
 		return false;														//No More memory open
 	}
 }
@@ -126,9 +145,11 @@ bool Memory::write(mem_addr memory_address_in, mem_addr data)
 	switch(decode_address_bin(memory_copy_bin))
 	{
 	case 1:
+			cout << "Error: You do not have the correct user privileges to write to text segment." << endl;
 			return false;
 		break;
 	case 2:
+			cout << "Error: You do not have the correct user privileges to write to data segment." << endl;
 			return false;
 		break;
 	case 3:
@@ -141,14 +162,17 @@ bool Memory::write(mem_addr memory_address_in, mem_addr data)
 			}
 			else
 			{		
+				cout << "Error: Please expand space for Stack Memory" << endl;
 				return false;														//No More stack open
 			}
 		}
 		break;
 	default:
+			cout << "Error: You cannot write to that memory area." << endl;
 			return false;															//Not in current memory
 		break;
 	}
+	cout << "Error: Memory write went wrong." << endl;
 	return false;
 }
 
