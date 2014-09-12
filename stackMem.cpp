@@ -7,6 +7,7 @@
 
 #include <cstdlib>
 #include <stdio.h>
+#include <stdint.h>
 #include <iostream>
 #include <fstream>
 #include <string>
