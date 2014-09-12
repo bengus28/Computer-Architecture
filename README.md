@@ -1,17 +1,27 @@
 Computer-Architecture
 =====================
-COMP 4300 
-Project 1, Group 1
-Ben Gustafson, BRG0005
-John Riddell, JPR0014
+-COMP 4300 
+-Project 1, Group 1
+-Ben Gustafson, BRG0005
+-John Riddell, JPR0014
 
 Overview:
 -------------
 
 We have two simulators, one is a stack Machine and one is an Accumulator.
-They both read in code from their respective "<type>Code.txt" files. 
+They both read in code from their respective "..type..Code.txt" files. (look in the notes seciton for more) 
 
 Each simulator has two parts. Memory simulation and the processor / instruction simulation.
+
+We are trying to evaluate this equation: 
+
+>A*X**2 + B*X + C
+>> x = 3
+>> A = 7
+>> B = 5
+>> C = 4
+>
+> Answer: 82
 
 To run each machine, look below!
 
@@ -48,7 +58,7 @@ This will clean up the folder.
 Accumulator
 -------------
 
-#### Compile Stack Machine ####
+#### Compile Accumulator ####
 
 Open up the terminal navigate to this project and run "$ make -f AccumMakefile".
 
@@ -71,7 +81,7 @@ This will clean up the folder.
 Noets
 -------------
 
-###### "<type>Code.txt" Files #####
+###### "..type..Code.txt" Files #####
 
 If you take a look in these, they will have two main sections; ".text" and ".data".
 
