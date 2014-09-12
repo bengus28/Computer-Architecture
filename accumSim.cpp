@@ -15,16 +15,16 @@ using namespace std;
 class Sim
 {
 public:
-	Sim();
-	void run();
+	Sim();										//Starts state of simulator and initializes memory
+	void run();									//This is the simulation, where the majic happens
 private:
-	int instruction_op();
-	mem_addr instruction_memory_address();
-	void load_next_instruction();
-	mem_addr internal_register;
-	mem_addr pc;
-	instruction *current_instruction;
-	Memory *mem;
+	int instruction_op();						//Returns the op code of internal current instruction
+	mem_addr instruction_memory_address();		//Returns the memory address of internal current instruction
+	void load_next_instruction();				//Takes all the steps to load next instruction
+	mem_addr internal_register;					//This is the accumulator its self
+	mem_addr pc;								//Program counter
+	instruction *current_instruction;			//Pointer to the current instruction
+	Memory *mem;								//Memory object
 };
 
 int main()
@@ -47,8 +47,6 @@ void Sim::run()
 	while(more_instructions)
 	{
 		load_next_instruction();
-		//cout << instruction_op() << " mem " << instruction_memory_address() << endl;
-		
 		switch(instruction_op())
 		{
 			case 1:	//LOAD
@@ -85,38 +83,28 @@ void Sim::run()
 				cout << "Error: There was an error with the execution of loaded instructions." << endl;
 				break;
 		}
-		//mem->print_memory();
-		//more_instructions = false;
 	}
 }
 
 int Sim::instruction_op()
-{	
-	instruction op_value;
+{															//Removes the memory address from instruction
+	instruction op_value;					
 	op_value = *current_instruction;
-	//cout << "--OP--" << endl;
-	//cout << std::hex << op_value << endl;
 	op_value = op_value >> 24;
-	//cout << std::hex << op_value << endl;
 	return op_value;
 }
 
 mem_addr Sim::instruction_memory_address()
-{
+{															//Removes the op code, resets to correct value
 	instruction memory_address;
 	memory_address = *current_instruction;
-	//cout << "--Memory Address--" << endl;
-	//cout << std::hex << memory_address << endl;
 	memory_address = memory_address << 8;
-	//cout << std::hex << memory_address << endl;
 	memory_address = memory_address >> 8;
 	return memory_address;
 }
 
 void Sim::load_next_instruction()
-{
+{															//Reads next instruction and increments pc
 	current_instruction = mem->read(pc);
-	//cout << "Loaded instruction" << endl;
-	//cout << std::hex << (int) *current_instruction << endl;
 	pc++;
 }

@@ -1,5 +1,5 @@
 /*******
-	Stack Machine Memory Simulation
+	Accumulator Machine Memory Simulation
 	09/07/14
 	Ben Gustafson
 	COMP 4300
@@ -14,9 +14,6 @@
 #define STACK_LENGTH  50
 
 using namespace std;
-
-
-
 
 /*******
 	Data Structures
@@ -54,9 +51,10 @@ private:
 	Class Definition 
 ********/
 
-Memory::Memory()  //Initialize memory
+Memory::Memory()  													//Initialize memory
 {
 	text_next_open_memory_location = -1;
+	
 	/**
 		TODO: parse file and loade code and data
 	**/
@@ -159,7 +157,7 @@ mem_addr * Memory::read(mem_addr memory_address_in )
 	case 1:
 		{
 			int memory_index = (int) decode_address_index(memory_copy_index);									
-			if (memory_index < TEXT_LENGTH)											//Checks memory length
+			if (memory_index < TEXT_LENGTH)											//Checks text memory length
 			{
 				return &text_segment[memory_index];
 			}
@@ -168,7 +166,7 @@ mem_addr * Memory::read(mem_addr memory_address_in )
 	case 2:
 		{
 			int memory_index = (int) decode_address_index(memory_copy_index);
-			if (text_next_open_memory_location < DATA_LENGTH)						//Checks memory length
+			if (text_next_open_memory_location < DATA_LENGTH)						//Checks data memory length
 			{
 				return &data_segment[memory_index];									
 			}
@@ -177,7 +175,7 @@ mem_addr * Memory::read(mem_addr memory_address_in )
 	case 3:
 		{
 			int memory_index = (int) decode_address_index(memory_copy_index);
-			if (text_next_open_memory_location < STACK_LENGTH)						//Checks memory length
+			if (text_next_open_memory_location < STACK_LENGTH)						//Checks stack memory length
 			{
 				return &stack_segment[memory_index];									
 			}
@@ -185,38 +183,33 @@ mem_addr * Memory::read(mem_addr memory_address_in )
 		break;
 	default:
 			cout << "Error: Memory read is not within current memory." << endl;
-			return &stack_top;														//Not in current memory
+			return &stack_top;														//Not in current memory space
 		break;
 	}
 	cout << "Error: Memory read went wrong." << endl;
 	return &stack_top;
 }
 
-//General funciton to decode the memory addresses coming in and give the correct "bin" where it is stored
-//(-1) -- false
-// 0--kernal
-// 1--text
-// 2--data
-// 3--stack
 int Memory::decode_address_bin(mem_addr memory_address_in)
-{
-	//cout << "--bin--" << endl;
-	//cout << std::hex << memory_address_in << endl;
+{																//Wipes out everything but the bin bits
 	memory_address_in = memory_address_in << 7;
-	//cout << std::hex << memory_address_in << endl;
 	memory_address_in = memory_address_in >> 27;
-	//cout << std::hex << memory_address_in << endl;
 	return memory_address_in;
+	//(-1) -- false
+	// 0--kernal
+	// 1--text
+	// 2--data
+	// 3--stack
 }
 
 int Memory::decode_address_index(mem_addr memory_address_in)
-{
+{																//Removes the (potential) op code and bin
 	memory_address_in = memory_address_in << 15;
 	memory_address_in = memory_address_in >> 15;
 	return memory_address_in;
 }
 
-void Memory::print_memory()
+void Memory::print_memory()										//To give a visual of the memory space
 {
 //text
 	int memory_index = 0;
