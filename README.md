@@ -111,13 +111,13 @@ This is where the beginning information is provided for the computation.
 
 ###### Memory Address Length ######
 
-Dealing with the memory address length and then having an instruction length was a particularly hard/confusing subject. We ended up going with the instruction being 32 bits with an op code having 8 bits on the left hand side. This meant that our memory address is only 24 bits. Unfortunately defining a 40 bit instruction didn't seem feasible.
+> Dealing with the memory address length and then having an instruction length was a particularly hard/confusing subject. We ended up going with the instruction being 32 bits with an op code having 8 bits on the left hand side. This meant that our memory address is only 24 bits. Unfortunately defining a 40 bit instruction didn't seem feasible.
 
 
 ###### Instruction Encoding ######
 
-With the requirment of supporting 140 operations, we were forced to have an 8 bit op code.
+> With the requirment of supporting 140 operations, we were forced to have an 8 bit op code. <br/>
 > 2^7 = 128 <br/>
-> 2^8 = 265
-At first we were concerned this was going to be the largest hurdle to overcome. It ended up being taken care of with a few well placed bit shifts. In total only about 15 lines of code took care of all the operations we needed to decode out encoding. 
+> 2^8 = 265 <br/>
+> At first we were concerned this was going to be the largest hurdle to overcome. It ended up being taken care of with a few well placed bit shifts. In total only about 15 lines of code took care of all the operations we needed to decode out encoding. 
 
