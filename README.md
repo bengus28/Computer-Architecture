@@ -5,7 +5,7 @@ Computer-Architecture
 - Ben Gustafson, BRG0005
 - John Riddell, JPR0014
 
-Overview:
+Overview: 
 -------------
 
 We have two simulators, one is a stack Machine and one is an Accumulator.
