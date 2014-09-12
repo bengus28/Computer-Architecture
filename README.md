@@ -117,7 +117,7 @@ This is where the beginning information is provided for the computation.
 ###### Instruction Encoding ######
 
 > With the requirment of supporting 140 operations, we were forced to have an 8 bit op code. <br/>
-> 2^7 = 128 <br/>
+> 2^7 = 128 (Not Enough)<br/>
 > 2^8 = 265 <br/>
 > At first we were concerned this was going to be the largest hurdle to overcome. It ended up being taken care of with a few well placed bit shifts. In total only about 15 lines of code took care of all the operations we needed to decode out encoding. 
 
