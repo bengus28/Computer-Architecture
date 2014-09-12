@@ -89,7 +89,9 @@ Memory::Memory()  //Initialize memory
 				}
 				
 				hexidecimal2 = atoi(line2.c_str());
+				cout << std::hex << hexidecimal2 << endl;
 				hexidecimal3 = atoi(line3.c_str());
+				cout << std::hex << hexidecimal3 << endl;
 				load_data(hexidecimal2,hexidecimal3);
 			}
 			
@@ -100,10 +102,6 @@ Memory::Memory()  //Initialize memory
 	}
 	stack_file.close();
   
-
-
-
-
 	/**
 	load_code(0x01200000);
 	load_code(0x01200000);
