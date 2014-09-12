@@ -58,7 +58,57 @@ Memory::Memory()  													//Initialize memory
 	/**
 		TODO: parse file and loade code and data
 	**/
+	int hexidecimal;
+	int hexidecimal2;
+	int hexidecimal3;
+  string line;
+  string line2 = "0000000000";
+  string line3 = "0";
+  int i = 0;
+  ifstream stack_file ("stackCode.txt");
+  if (stack_file.is_open())
+  {
+    while ( getline (stack_file,line))
+    {
+		if (line == ""){continue;}
+		if (line == ".data"){i = 1; continue;}
+		if (line == ".text"){continue;}
+		
+		
+		
+		if (i == 0) {
+			
+			hexidecimal = atoi(line.c_str());
+			load_code(hexidecimal);
+		
+		}
+		if (i == 1) {
+		
+			
+			for (int c = 0; c < 10; c++){
 
+				line2[c] = line[c];
+				line3[0] = line[11];
+
+			}
+			hexidecima2 = atoi(line2.c_str());
+			hexidecimal3 = atoi(line3.c_str());
+			load_data(hexidecimal2,hexidecimal3);
+		}
+		
+		
+		
+    }
+    stack_file.close();
+  }
+
+  else cout << "Unable to open file"; 
+
+  return 0;
+}
+
+
+	/**
 	load_code(0x01200000);
 	load_code(0x04200000);
 	load_code(0x04200001);
@@ -74,6 +124,7 @@ Memory::Memory()  													//Initialize memory
 	load_data(0x00200001,7);
 	load_data(0x00200002,5);
 	load_data(0x00200003,4);
+	**/
 }
 
 
