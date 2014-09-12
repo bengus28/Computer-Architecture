@@ -63,6 +63,7 @@ Memory::Memory()  //Initialize memory
 	int hexidecimal;
 	int hexidecimal2;
 	int hexidecimal3;
+	mem_addr hexi1;
 	string line;
 	string line2 = "0000000000";
 	string line3 = "0";
