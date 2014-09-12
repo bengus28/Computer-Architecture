@@ -54,12 +54,9 @@ private:
 	Class Definition 
 ********/
 
-Memory::Memory()  //Initialize memory
+Memory::Memory()  													//Initialize memory, load from file
 {
 	text_next_open_memory_location = -1;
-	/**
-		TODO: parse file and loade code and data
-	**/
 	int hexidecimal;
 	int hexidecimal2;
 	int hexidecimal3;
@@ -75,53 +72,29 @@ Memory::Memory()  //Initialize memory
 		{
 			if (line == ""){continue;}
 			if (line == ".data"){i = 1; continue;}
-			if (line == ".text"){continue;}
-			
-			if (i == 0) {
-				hexidecimal = atoi(line.c_str());
-				cout << std::hex << hexidecimal << endl;
+			if (line == ".text"){continue;}	
+			if (i == 0) 												//Text
+			{
+				hexidecimal = std::stoi(line.c_str(),0, 16);
 				load_code(hexidecimal);
 			}
-			if (i == 1) {
-				for (int c = 0; c < 10; c++){
+			if (i == 1) 												//Data
+			{
+				for (int c = 0; c < 10; c++)
+				{
 					line2[c] = line[c];
 					line3[0] = line[11];
-		
 				}
-				
-				hexidecimal2 = atoi(line2.c_str());
-				cout << std::hex << hexidecimal2 << endl;
+				hexidecimal2 = std::stoi(line2.c_str(),0, 16);
 				hexidecimal3 = atoi(line3.c_str());
-				cout << std::hex << hexidecimal3 << endl;
 				load_data(hexidecimal2,hexidecimal3);
-			}
-			
+			}	
 		}
 	}
 	else{
-		cout << "Unable to open file"; 
+		cout << "Error: Unable to open file."; 
 	}
 	stack_file.close();
-  
-	/**
-	load_code(0x01200000);
-	load_code(0x01200000);
-	load_code(0x04000000);
-	load_code(0x01200001);
-	load_code(0x04000000);
-	load_code(0x01200002);
-	load_code(0x01200000);
-	load_code(0x04000000);
-	load_code(0x01200003);
-	load_code(0x03000000);
-	load_code(0x03000000);
-	load_code(0x02000000);
-	load_code(0x05000000);	
-	load_data(0x00200000,3);
-	load_data(0x00200001,7);
-	load_data(0x00200002,5);
-	load_data(0x00200003,4);	
-	**/
 }
 
 
