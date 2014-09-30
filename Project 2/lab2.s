@@ -51,9 +51,9 @@ test_loop:
 
 	addi $t1, $t1, 1	# increment A,
 	subi $t2, $t2, 1	# decrement B,
-	b test_loop		# and repeat the loop.
+	b test_loop			# and repeat the loop.
 
-is_palin:			# print the is_palin_msg, and exit.
+is_palin:				# print the is_palin_msg, and exit.
 
 	la $a0, is_palin_msg
 	li $v0, 4
