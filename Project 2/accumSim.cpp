@@ -134,7 +134,10 @@ void Sim::run()
 			case 13://END
 			{
 				more_instructions = false;
-				cout << std::dec << internal_register << " is in the internal_register." <<endl;
+				cout << "Ending:" << endl;
+				cout << "Number of Instructions Executed (IC): " << total_instructions_executed << endl;
+				cout << "Number of Cycles Spent in Execution (C):" << total_cycles_spent << endl;
+				cout << "Speed-up:" << (8*total_instructions_executed) / total_cycles_spent << endl;
 				cout << "Goodbye: Program is ending." << endl;
 				break;
 			}
