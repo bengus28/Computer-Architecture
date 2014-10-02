@@ -8,7 +8,7 @@
 #include <cstdlib>
 #include <stdio.h>
 #include <iostream>
-#include "accumMem.cpp"
+#include "gprMem.cpp"
 
 using namespace std;
 
