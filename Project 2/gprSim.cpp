@@ -1,6 +1,6 @@
 /*******
-	Accumulator Machine Simulation
-	09/07/14
+	General Purpose Register Machine Simulation
+	10/10/14
 	Ben Gustafson
 	COMP 4300
 ********/
@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <iostream>
 #include "gprMem.cpp"
+#include "gprReg.cpp"
 
 using namespace std;
 

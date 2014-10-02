@@ -1,6 +1,6 @@
 /*******
-	Accumulator Machine Memory Simulation
-	09/07/14
+	General Purpose Register Machine Memory Simulation
+	10/01/14
 	Ben Gustafson
 	COMP 4300
 ********/
@@ -15,6 +15,7 @@
 #define TEXT_LENGTH  100
 #define	DATA_LENGTH  50
 #define STACK_LENGTH  50
+
 
 using namespace std;
 
