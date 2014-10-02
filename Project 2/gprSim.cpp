@@ -26,6 +26,7 @@ private:
 	mem_addr pc;								//Program counter
 	instruction *current_instruction;			//Pointer to the current instruction
 	Memory *mem;								//Memory object
+	Register_Bank *registers;					//CPU internal registers
 };
 
 int main()
@@ -40,6 +41,7 @@ Sim::Sim()
 	internal_register = 0;
 	pc = text_top;
 	mem = new Memory();
+	registers = new Register_Bank();
 }
 
 void Sim::run()

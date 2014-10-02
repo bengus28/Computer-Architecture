@@ -40,18 +40,37 @@ public:
 
 Register_Bank::Register_Bank()  													//Initialize memory
 {
-
+	//empty on purpose
 }
 
 bool Register_Bank::write(mem_addr memory_address_in, mem_addr data)
 {
+	if (memory_address_in > REGISTER_LENGTH)
+	{
+		cout << "Error: Register write is out of bounds." << endl;
+		return false;
+	}
+	else
+	{
+		registers[memory_address_in] = data;
+		return true;
+	}
 	cout << "Error: Register write went wrong." << endl;
 	return false;
 }
 
 
 mem_addr Register_Bank::read(mem_addr memory_address_in )
-{	
+{
+	if (memory_address_in > REGISTER_LENGTH)
+	{
+		cout << "Error: Register read is out of bounds." << endl;
+		return false;
+	}
+	else
+	{
+		return registers[memory_address_in];
+	}
 	cout << "Error: Register read went wrong." << endl;
 	return 0;
 }
@@ -62,7 +81,7 @@ void Register_Bank::print_memory()										//To give a visual of the Register M
 	cout <<	"==== REGISTERS ======================" << endl;
 	while (memory_index < REGISTER_LENGTH)
 	{
-		cout << "  " << std::hex << registers[memory_index] << endl;
+		cout << memory_index << ":  " << std::dec << registers[memory_index] << endl;
 		memory_index++;
 	}
 	cout <<	"==========================" << endl;
