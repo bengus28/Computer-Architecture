@@ -20,7 +20,11 @@ public:
 	void run();									//This is the simulation, where the magic happens
 private:
 	int instruction_op();						//Returns the op code of internal current instruction
-	mem_addr instruction_memory_address();		//Returns the memory address of internal current instruction
+	mem_addr instruction_memory_address();		//Returns the memory address of internal current instruction (last 24 bits)
+	mem_addr first_register();					//Returns bits 24 - 16
+	mem_addr second_register();					//Returns bits 16-8
+	mem_addr third_register();					//Returns bits 8-0
+	mem_addr immediate_value();					//Returns bits 16-0
 	void load_next_instruction();				//Takes all the steps to load next instruction
 	mem_addr internal_register;					//This is the accumulator its self
 	mem_addr pc;								//Program counter
@@ -46,7 +50,18 @@ Sim::Sim()
 
 void Sim::run()
 {
-	bool more_instructions = true;
+	load_next_instruction();
+	
+	cout << "a " << std::hex << *current_instruction << endl;
+	cout << "1 " << std::hex << instruction_op() << endl;
+	cout << "2 " << std::hex << instruction_memory_address() << endl;
+	cout << "3 " << std::hex << first_register() << endl;
+	cout << "4 " << std::hex << second_register() << endl;
+	cout << "5 " << std::hex << third_register() << endl;
+	cout << "6 " << std::hex << immediate_value() << endl;
+	mem->print_memory();
+		
+	bool more_instructions = false;
 	int total_instructions_executed = 0;
 	int total_cycles_spent = 0;
 	while(more_instructions)
@@ -152,7 +167,7 @@ void Sim::run()
 }
 
 int Sim::instruction_op()
-{															//Removes the memory address from instruction
+{															//Removes the memory address from instruction, bits 32-24
 	instruction op_value;					
 	op_value = *current_instruction;
 	op_value = op_value >> 24;
@@ -160,7 +175,7 @@ int Sim::instruction_op()
 }
 
 mem_addr Sim::instruction_memory_address()
-{															//Removes the op code, resets to correct value
+{															//Removes the op code, resets to correct value, bits 24-0
 	instruction memory_address;
 	memory_address = *current_instruction;
 	memory_address = memory_address << 8;
@@ -168,6 +183,42 @@ mem_addr Sim::instruction_memory_address()
 	return memory_address;
 }
 
+mem_addr Sim::first_register()									//Left most register slot in instruciton, Returns bits 24 - 16
+{
+	instruction memory_address;
+	memory_address = *current_instruction;
+	memory_address = memory_address << 8;
+	memory_address = memory_address >> 24;
+	return memory_address;
+}
+
+mem_addr Sim::second_register()									//Center register slot in instruction, Returns bits 16-8
+{
+	instruction memory_address;
+	memory_address = *current_instruction;
+	memory_address = memory_address << 16;
+	memory_address = memory_address >> 24;
+	return memory_address;
+}
+
+mem_addr Sim::third_register()									//Right most register slot in instruction, Returns bits 8-0
+{
+	instruction memory_address;
+	memory_address = *current_instruction;
+	memory_address = memory_address << 24;
+	memory_address = memory_address >> 24;
+	return memory_address;
+}
+
+mem_addr Sim::immediate_value()									//Gives value of immediate slot, Returns bits 16-0
+{
+	instruction memory_address;
+	memory_address = *current_instruction;
+	memory_address = memory_address << 16;
+	memory_address = memory_address >> 16;
+	return memory_address;
+}
+		
 void Sim::load_next_instruction()
 {															//Reads next instruction and increments pc
 	current_instruction = mem->read(pc);
