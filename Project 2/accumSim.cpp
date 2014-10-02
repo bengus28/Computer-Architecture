@@ -16,7 +16,7 @@ class Sim
 {
 public:
 	Sim();										//Starts state of simulator and initializes memory
-	void run();									//This is the simulation, where the majic happens
+	void run();									//This is the simulation, where the magic happens
 private:
 	int instruction_op();						//Returns the op code of internal current instruction
 	mem_addr instruction_memory_address();		//Returns the memory address of internal current instruction
@@ -44,6 +44,8 @@ Sim::Sim()
 void Sim::run()
 {
 	bool more_instructions = true;
+	int total_instructions_executed = 0;
+	int total_cycles_spent = 0;
 	while(more_instructions)
 	{
 		load_next_instruction();
@@ -51,28 +53,85 @@ void Sim::run()
 		{
 			case 1:	//LOAD
 			{
-				mem_addr *data = mem->read(instruction_memory_address());
-				internal_register = *data;
+				cout << "Error: LOAD Instruction not implemented." << endl;
 				break;
 			}
 			case 2:	//STORE
 			{
-				mem->write(instruction_memory_address(),internal_register);
+				cout << "Error: STORE Instruction not implemented." << endl;
 				break;
 			}
-			case 3: //ADD
+			case 3: //ADDI ADD IMMEDIATE 
 			{
-				mem_addr *data = mem->read(instruction_memory_address());
-				internal_register = internal_register + *data;
+				total_instructions_executed += 1;
+				total_cycles_spent += 6;
+				
 				break;
 			}
-			case 4:	//MULT
+			case 4: //B BRANCH
 			{
-				mem_addr *data = mem->read(instruction_memory_address());
-				internal_register = internal_register * *data;
+				total_instructions_executed += 1;
+				total_cycles_spent += 4;
+				
 				break;
 			}
-			case 5:	//END
+			case 5: //BEQZ BRACH IF EQUAL TO ZERO
+			{
+				total_instructions_executed += 1;
+				total_cycles_spent += 5;
+				
+				break;
+			}
+			case 6: //BGE BRANCH IF GREATER OR EQUAL $t0,$t1,target,  $t0 >= $t1
+			{
+				total_instructions_executed += 1;
+				total_cycles_spent += 5;
+				
+				break;
+			}
+			case 7: //BNE BRANCH IF NOT EQUAL  $t0,$t1,target, $t0 <> $t1
+			{
+				total_instructions_executed += 1;
+				total_cycles_spent += 5;
+				
+				break;
+			}
+			case 8: //LA LOAD ADDRESS
+			{
+				total_instructions_executed += 1;
+				total_cycles_spent += 5;
+				
+				break;
+			}
+			case 9: //LB LOAD BYTE
+			{
+				total_instructions_executed += 1;
+				total_cycles_spent += 6;
+				
+				break;
+			}
+			case 10: //LI LOAD IMMEDIATE 
+			{
+				total_instructions_executed += 1;
+				total_cycles_spent += 3;
+				
+				break;
+			}
+			case 11: //SUBI SUBTRACT IMMEDIATE
+			{
+				total_instructions_executed += 1;
+				total_cycles_spent += 6;
+				
+				break;
+			}
+			case 12: //SYSCALL
+			{
+				total_instructions_executed += 1;
+				total_cycles_spent += 8;
+				
+				break;
+			}
+			case 13://END
 			{
 				more_instructions = false;
 				cout << std::dec << internal_register << " is in the internal_register." <<endl;
