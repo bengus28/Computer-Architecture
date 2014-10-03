@@ -69,8 +69,8 @@ Memory::Memory()  													//Initialize memory
 	int hexidecimal3;
 	string textLine;
 	string dataAddress = "0000000000";
-	string data = "0000000000000000000000000000000000000";
-	char dataArray[37];
+	char dataArray[41];
+	memset(dataArray,'\0',41);
 	int i = 0;
 	ifstream gpr_file_code ("gprCode.txt");
 	if (gpr_file_code.is_open())
@@ -83,21 +83,21 @@ Memory::Memory()  													//Initialize memory
 			if (i == 0) 												//Text
 			{
 				hexidecimal = std::stoi(textLine.c_str(),0, 16);
-				cout << textLine + "\n";
-				//read_string(hexidecimal);
+				//cout << textLine + "\n";
+				read_string(hexidecimal);
 			}
 			if (i == 1) 												//Data
 			{
 				for (int c = 0; c < 10; c++){dataAddress[c] = textLine[c];}
-				for (int c = 0;c < 37; c++){
-					if (data[c] == NULL){data[c] = 0;}
-					data[c] = textLine[c+11];
+				for (int c = 0;c <40; c++){
+					if (dataArray[c] == NULL){dataArray[c] = '\0';}
+					dataArray[c] = textLine[c+10];
 				}
 				hexidecimal2 = std::stoi(dataAddress.c_str(),0, 16);
-				hexidecimal3 = atoi(data.c_str());
-				cout << dataAddress + "\n";
-				cout << data + "\n";
-				//load_string(hexidecimal2, hexidecimal3)
+				hexidecimal3 = atoi(dataArray);
+				//cout << dataAddress + "\n";
+				//printf("%s",dataArray);
+				load_string(hexidecimal2, hexidecimal3);
 				
 			}	
 		}
