@@ -10,6 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <math.h>
 
 
 #define TEXT_LENGTH  100
@@ -25,9 +26,9 @@ using namespace std;
 typedef uint32_t mem_addr;
 typedef uint32_t instruction;
 
-mem_addr text_top = 0x00100000;
-mem_addr data_top = 0x00200000;
-mem_addr stack_top = 0x00300000;
+mem_addr text_top = 0x00001000;
+mem_addr data_top = 0x00002000;
+mem_addr stack_top = 0x00003000;
 
 //Kernal data starts at mem_addr 0, ommited because we don't use it in this simulation
 instruction text_segment[TEXT_LENGTH];
@@ -45,13 +46,14 @@ public:
     mem_addr * read(mem_addr memory_address_in);					//Reads based on given memory address
     bool load_string(mem_addr m_add, char string_to_be_stored[]);	//Write given string to memory
     string read_string(mem_addr memory_address);					//Read a string from memory
+    mem_addr read_byte(mem_addr memory_address_in, int byte);		//Reads byte at given address
     void print_memory();											//Prints out current memory state
 private:
 	int decode_address_bin(mem_addr memory_address_in);				//Helps decode address into bin
 	int decode_address_index(mem_addr memory_address_in);			//Helps decode address into array index
 	int text_next_open_memory_location;								//Internal counter for text_segment
 	int length_of_string(mem_addr memory_address_in, int max_length);//Helper to find the end of string in memory.
-	mem_addr byte(instruction data_in,int byte_number);		//returns a byte inside the instruction.
+	mem_addr mem_byte(instruction data_in,int byte_number);		//returns a byte inside the instruction.
 };
 
 
@@ -174,7 +176,7 @@ bool Memory::write(mem_addr memory_address_in, mem_addr data)
 }
 
 
-mem_addr * Memory::read(mem_addr memory_address_in )
+mem_addr * Memory::read(mem_addr memory_address_in)
 {	
 	mem_addr memory_copy_bin = memory_address_in, memory_copy_index = memory_address_in;
 	switch(decode_address_bin(memory_copy_bin))
@@ -217,8 +219,8 @@ mem_addr * Memory::read(mem_addr memory_address_in )
 
 int Memory::decode_address_bin(mem_addr memory_address_in)
 {																//Wipes out everything but the bin bits
-	memory_address_in = memory_address_in << 7;
-	memory_address_in = memory_address_in >> 27;
+	memory_address_in = memory_address_in << 16;
+	memory_address_in = memory_address_in >> 28;
 	return memory_address_in;
 	//(-1) -- false
 	// 0--kernal
@@ -229,8 +231,8 @@ int Memory::decode_address_bin(mem_addr memory_address_in)
 
 int Memory::decode_address_index(mem_addr memory_address_in)
 {																//Removes the (potential) op code and bin
-	memory_address_in = memory_address_in << 15;
-	memory_address_in = memory_address_in >> 15;
+	memory_address_in = memory_address_in << 20;
+	memory_address_in = memory_address_in >> 20;
 	return memory_address_in;
 }
 
@@ -316,7 +318,7 @@ string Memory::read_string(mem_addr memory_address)
 	return "Error";
 }
 
-int Memory::length_of_string(mem_addr memory_address_in, int max_length)			//Helper to find the end of string in memory.
+int Memory::length_of_string(mem_addr memory_address_in, int max_length)		//Helper to find the end of string in memory.
 {
 	switch(decode_address_bin(memory_address_in))
 	{
@@ -335,7 +337,7 @@ int Memory::length_of_string(mem_addr memory_address_in, int max_length)			//Hel
 				mem_addr current_byte=0;
 				while(end_not_found && length < max_length)
 				{
-					current_byte = byte( data_segment[data_index], 1+(length %4));
+					current_byte = mem_byte( data_segment[data_index], 1+(length %4));
 					if(0 == current_byte)
 					{
 						end_not_found = false;
@@ -356,7 +358,7 @@ int Memory::length_of_string(mem_addr memory_address_in, int max_length)			//Hel
 				mem_addr current_byte =0;
 				while(end_not_found && length < max_length)
 				{
-					current_byte = byte(stack_segment[data_index], 1+(length %4));
+					current_byte = mem_byte(stack_segment[data_index], 1+(length %4));
 					if(0 == current_byte)
 					{
 						end_not_found = false;
@@ -378,7 +380,7 @@ int Memory::length_of_string(mem_addr memory_address_in, int max_length)			//Hel
 	return 0;
 }
 
-mem_addr Memory::byte(instruction data_in, int byte_number)
+mem_addr Memory::mem_byte(instruction data_in, int byte_number)
 {																//Returns a byte inside the instruction.					
 	if (byte_number < 5 && byte_number > 0)
 	{
@@ -391,6 +393,46 @@ mem_addr Memory::byte(instruction data_in, int byte_number)
 	}
 	cout << "Error: Memory byte read" << endl;
 	return 0;
+} 
+
+mem_addr Memory::read_byte(mem_addr memory_address_in, int byte)
+{
+	mem_addr memory_copy_bin = memory_address_in, memory_copy_index = memory_address_in;
+	int memory_index = (int) decode_address_index(memory_copy_index);
+	memory_index = (int) floor(memory_index/4.0);	
+	mem_addr memory_value;
+	switch(decode_address_bin(memory_copy_bin))
+	{
+	case 1:
+		{						
+			if (memory_index < TEXT_LENGTH)											//Checks text memory length
+			{
+				memory_value= text_segment[memory_index];
+			}
+		}
+		break;
+	case 2:
+		{
+			if (memory_index < DATA_LENGTH)											//Checks data memory length
+			{
+				memory_value= data_segment[memory_index];									
+			}
+		}
+		break;
+	case 3:
+		{
+			if (memory_index < STACK_LENGTH)										//Checks stack memory length
+			{
+				memory_value= stack_segment[memory_index];									
+			}
+		}
+		break;
+	default:
+			cout << "Error: Memory read is not within current memory." << endl;
+			memory_value= stack_top;														//Not in current memory space
+		break;
+	}
+	return mem_byte(memory_value, byte);
 }
 		
 void Memory::print_memory()									//To give a visual of the memory space

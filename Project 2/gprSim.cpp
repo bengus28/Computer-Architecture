@@ -26,7 +26,6 @@ private:
 	mem_addr third_register();					//Returns bits 8-0
 	mem_addr immediate_value();					//Returns bits 16-0
 	void load_next_instruction();				//Takes all the steps to load next instruction
-	mem_addr internal_register;					//This is the accumulator its self
 	mem_addr pc;								//Program counter
 	instruction *current_instruction;			//Pointer to the current instruction
 	Memory *mem;								//Memory object
@@ -42,7 +41,6 @@ int main()
 
 Sim::Sim()
 {
-	internal_register = 0;
 	pc = text_top;
 	mem = new Memory();
 	registers = new Register_Bank();
@@ -77,19 +75,23 @@ void Sim::run()
 			}
 			case 3: //ADDI ADD IMMEDIATE 
 			{
-				uint32_t immediate = immediate_value();
+				int8_t immediate = third_register();
 				uint32_t register_value = registers->read(second_register());
 				bool success = registers->write(first_register(), immediate + register_value);
 				if (false == success)
 				{
 					cout << "Error: Adding value to register: "<< std::dec << second_register() << endl;
 				}
+				
 				total_instructions_executed += 1;
 				total_cycles_spent += 6;
 				break;
 			}
 			case 4: //B BRANCH
 			{
+				int8_t label_offset =0;
+				label_offset = third_register();
+				pc += label_offset;
 				
 				total_instructions_executed += 1;
 				total_cycles_spent += 4;
@@ -97,41 +99,77 @@ void Sim::run()
 			}
 			case 5: //BEQZ BRACH IF EQUAL TO ZERO
 			{
+				int8_t label_offset =0;
+				if (second_register() == 0)
+				{
+					label_offset = third_register();
+					pc += label_offset;
+				}
+				
 				total_instructions_executed += 1;
 				total_cycles_spent += 5;
-				
 				break;
 			}
 			case 6: //BGE BRANCH IF GREATER OR EQUAL $t0,$t1,target,  $t0 >= $t1
 			{
+				int8_t label_offset =0;
+				if ( registers->read(first_register())  >=  registers->read(second_register()))
+				{
+					label_offset = third_register();
+					pc += label_offset;
+				}
+				
 				total_instructions_executed += 1;
 				total_cycles_spent += 5;
-				
 				break;
 			}
 			case 7: //BNE BRANCH IF NOT EQUAL  $t0,$t1,target, $t0 <> $t1
 			{
+				int8_t label_offset =0;
+				if ( registers->read(first_register())  !=  registers->read(second_register()))
+				{
+					label_offset = third_register();
+					pc += label_offset;
+				}
+				
 				total_instructions_executed += 1;
 				total_cycles_spent += 5;
-				
 				break;
 			}
 			case 8: //LA LOAD ADDRESS
 			{
+				bool success = registers->write(first_register(),immediate_value());
+				if (false == success)
+				{
+					cout << "Error: Loading Address to register: "<< std::dec << first_register() << endl;
+				}
+				
 				total_instructions_executed += 1;
 				total_cycles_spent += 5;
-				
 				break;
 			}
 			case 9: //LB LOAD BYTE
 			{
+				mem_addr address_value = registers->read(second_register()); 		//number of bytes
+				int8_t immediate = third_register();
+				address_value += immediate;
+				bool success = registers->write(first_register(),mem->read_byte(address_value, address_value%4) );
+				if (false == success)
+				{
+					cout << "Error: Loading Byte into register: "<< std::dec << first_register() << endl;
+				}
+				
 				total_instructions_executed += 1;
 				total_cycles_spent += 6;
-				
 				break;
 			}
 			case 10: //LI LOAD IMMEDIATE 
 			{
+				bool success = registers->write(first_register(), second_register());
+				if (false == success)
+				{
+					cout << "Error: Loading Immediate value to register: "<< std::dec << first_register() << endl;
+				}
 				
 				total_instructions_executed += 1;
 				total_cycles_spent += 3;
@@ -139,7 +177,7 @@ void Sim::run()
 			}
 			case 11: //SUBI SUBTRACT IMMEDIATE
 			{
-				uint32_t immediate = immediate_value();
+				int8_t immediate = third_register();
 				uint32_t register_value = registers->read(second_register());
 				bool success = registers->write(first_register(), register_value - immediate);
 				if (false == success)
@@ -155,21 +193,29 @@ void Sim::run()
 				total_instructions_executed += 1;
 				total_cycles_spent += 8;
 				
-				switch(registers->read(0))
+				switch(registers->read(20))
 				{
 					case 4:	//Print String 
 					{
-						
+						cout << "Str read:" << mem->read_string(registers->read(0)) << endl;
 						break;
 					}
 					case 8:	//Read String In
 					{
-						
+						char palin[1024];
+						string incoming_palin;
+						cout << "Please enter a word. ";
+						getline(cin, incoming_palin);
+						incoming_palin.copy(palin,1024,0);
+						//char palin[1024];
+						//cin >> *palin >> "\0";
+						mem->load_string(registers->read(0),palin);
 						break;
 					}
 					case 10:// End Program
 					{
 						more_instructions = false;
+						cout << " " <<endl;
 						cout << "Ending:" << endl;
 						cout << "Number of Instructions Executed (IC): " << total_instructions_executed << endl;
 						cout << "Number of Cycles Spent in Execution (C):" << total_cycles_spent << endl;
@@ -180,13 +226,19 @@ void Sim::run()
 					default:
 					{
 						cout << "Error: There was an error with the execution of SYSCALL." << endl;
+						cout << "PC: " << pc << endl;
+						cout << "Current Istruction: " << current_instruction << endl;
+						more_instructions = false;
 						break;
 					}
 				}
 				break;
 			}
 			default:
-				cout << "Error: There was an error with the execution of loaded instructions." << endl;
+				cout << "Error: There was an error with the execution of loaded instruction." << endl;
+				cout << "PC: " << pc << endl;
+				cout << "Current Istruction: " << current_instruction << endl;
+				more_instructions = false;
 				break;
 		}
 	}

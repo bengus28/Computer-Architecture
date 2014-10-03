@@ -28,7 +28,7 @@ main:
 	
 
 	la $t1, string_space	# A = S.
-	la $t2, string_space	# we need to move B to the end
+	la $t2, string_space	# we need to move B to the end    Need to be in byte refernce. 
 
 length_loop:				# length of the string
 	lb $t3, ($t2)			# load the byte at addr B into $t3.
