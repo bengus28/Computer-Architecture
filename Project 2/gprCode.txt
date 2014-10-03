@@ -44,10 +44,7 @@
 0x08100A00
 0x08000000
 .data
-0x00004100:"The string is a palindrome.\n"                                    
-0x00004200:"The string is not a palindrome.\n"                                   
-0x00004300:1024                                                                 
-
-
-
+0x00002000:"The string is a palindrome.\n"                                    
+0x00002010:"The string is not a palindrome.\n"                                   
+0x00002020:1024                                                                 
 

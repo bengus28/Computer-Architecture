@@ -46,6 +46,7 @@ void Sim::run()
 	bool more_instructions = true;
 	while(more_instructions)
 	{
+		mem->print_memory();
 		load_next_instruction();
 		switch(instruction_op())
 		{
@@ -105,6 +106,8 @@ mem_addr Sim::instruction_memory_address()
 
 void Sim::load_next_instruction()
 {															//Reads next instruction and increments pc
+	cout << "Current Istruction: " << std::dec<< current_instruction << endl;
 	current_instruction = mem->read(pc);
+	cout << "Current Istruction: " << std::dec<< current_instruction << endl;
 	pc++;
 }

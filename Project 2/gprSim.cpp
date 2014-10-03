@@ -60,6 +60,10 @@ void Sim::run()
 	int total_cycles_spent = 0;
 	while(more_instructions)
 	{
+		if(total_instructions_executed > 6)
+		{
+			more_instructions = false;
+		}
 		load_next_instruction();
 		switch(instruction_op())
 		{

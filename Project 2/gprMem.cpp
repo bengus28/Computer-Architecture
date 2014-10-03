@@ -13,7 +13,7 @@
 #include <math.h>
 
 
-#define TEXT_LENGTH  100
+#define TEXT_LENGTH  50
 #define	DATA_LENGTH  50
 #define STACK_LENGTH  50
 
@@ -98,7 +98,6 @@ Memory::Memory()  													//Initialize memory
 				//cout << dataAddress + "\n";
 				//printf("%s",dataArray);
 				load_string(hexidecimal2, dataArray);
-				
 			}	
 		}
 	}
@@ -184,6 +183,8 @@ bool Memory::write(mem_addr memory_address_in, mem_addr data)
 mem_addr * Memory::read(mem_addr memory_address_in)
 {	
 	mem_addr memory_copy_bin = memory_address_in, memory_copy_index = memory_address_in;
+	cout <<  "read bin: "<< decode_address_bin(memory_copy_bin) << endl;
+	cout <<  "read index: "<< std::dec<< decode_address_index(memory_copy_index) << endl;
 	switch(decode_address_bin(memory_copy_bin))
 	{
 	case 1:
@@ -255,6 +256,7 @@ bool Memory::load_string(mem_addr m_add, char string_to_be_stored[])	//Write giv
 			int data_index = decode_address_index(m_add);
 			if (data_index < DATA_LENGTH)											
 			{
+				
 				memcpy(&data_segment[data_index], string_to_be_stored,  strlen(string_to_be_stored)+1);
 				return true;									
 			}
