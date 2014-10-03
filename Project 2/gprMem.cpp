@@ -84,7 +84,7 @@ Memory::Memory()  													//Initialize memory
 			{
 				hexidecimal = std::stoi(textLine.c_str(),0, 16);
 				//cout << textLine + "\n";
-				read_string(hexidecimal);
+				load_code(hexidecimal);
 			}
 			if (i == 1) 												//Data
 			{
@@ -94,10 +94,10 @@ Memory::Memory()  													//Initialize memory
 					dataArray[c] = textLine[c+10];
 				}
 				hexidecimal2 = std::stoi(dataAddress.c_str(),0, 16);
-				hexidecimal3 = atoi(dataArray);
+				//hexidecimal3 = atoi(dataArray);
 				//cout << dataAddress + "\n";
 				//printf("%s",dataArray);
-				load_string(hexidecimal2, hexidecimal3);
+				load_string(hexidecimal2, dataArray);
 				
 			}	
 		}
