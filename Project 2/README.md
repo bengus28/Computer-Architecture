@@ -8,22 +8,20 @@ Computer-Architecture
 Overview: 
 -------------
 
-We have two simulators, one is a stack Machine and one is an Accumulator.
-They both read in code from their respective "..type..Code.txt" files. (look in the notes section for more) 
+We have upgraded out single register accumulator to a functioning MIPS machine. Not all instructions of the MIPS ISA are implemented in this machine, but 12 are. The code this machine runs can be found in gprCode.txt.
 
-Each simulator has two parts. Memory simulation and the processor / instruction simulation.
+The written code evaluates if an entered word is a palindrome. For this program spaces are seen as an ending character. For example:
 
-We are trying to evaluate this equation: 
+	Please enter a word: palindrome
+	The string is not a palindrome.
 
->A*X**2 + B*X + C
->> - x = 3
->> - A = 7
->> - B = 5
->> - C = 4
->
-> Answer: 82
+OR
 
-To run each machine, look below!
+	Please enter a word: theeht
+	The string is a palindrome.
+
+
+To run the machine, look below!
 
 Happy simulating
 
@@ -31,64 +29,38 @@ War Eagle.
 
 
 
-Stack Machine
+Simple MIPS Machine
 -------------
 
-#### Compile Stack Machine ####
+#### Compile MIPS Machine ####
 
 Open up the terminal navigate to this project and run:
 	
-	$ make -f StackMakefile
+	$ make
 
 You should see this:
 
->g++ -c stackMem.cpp -o stackMem.o <br/>
->g++ stackSim.cpp -o stackSimulator.o
+>g++ -c gprMem.cpp -o gprMem.o
+>g++ -c gprReg.cpp -o gprReg.o
+>g++ gprSim.cpp -o gprSimulator.o
 
 Run: 
 
-	$ ./stackSimulator.o
+	$ ./gprSimulator.o
 
 You should see this: (With original code)
 
->82 was popped from the top of the sack. <br/>
->Goodbye: Program is ending.
+>Please enter a word:
+
+Enter any word and hit enter. If it is a palindrome the program will tell you!
 
 Once you are done run:
 	
-	$ make -f StackMakefile clean
+	$ make clean
 
 This will clean up the folder.
 
 
-Accumulator
--------------
-
-#### Compile Accumulator ####
-
-Open up the terminal navigate to this project and run:
-	
-	$ make -f AccumMakefile
-
-You should see this:
-
->g++ -c accumMem.cpp -o accumMem.o <br/>
->g++ accumSim.cpp -o accumSimulator.o
-
-Run:
-
-	$ ./accumSimulator.o
-
-You should see this: (With original code)
-
->82 is in the internal register. <br/>
->Goodbye: Program is ending.
-
-Once you are done run:
-
-	$ make -f AccumMakefile clean
-
-This will clean up the folder.
 
 Notes
 -------------
@@ -99,7 +71,7 @@ If you take a look in these, they will have two main sections; ".text" and ".dat
 
 >".text"
 
-This is where the binary for the code is. Humans read it as Push x, the computer reads it as "0x01200000". Weird huh?
+This is where the binary for the code is. Humans read it as addi $t1, $t1, 1 the computer reads it as "0x01323281". Weird huh?
 
 >".data"
 
@@ -111,13 +83,9 @@ This is where the beginning information is provided for the computation.
 
 ###### Memory Address Length ######
 
-> Dealing with the memory address length and then having an instruction length was a particularly hard/confusing subject. We ended up going with the instruction being 32 bits with an op code having 8 bits on the left hand side. This meant that our memory address is only 24 bits. Unfortunately defining a 40 bit instruction didn't seem feasible.
+> We had to change the default structure of our memory to fit in the MIPS architecture. We ran into several issues including finding bytes in memory segments, storing strings across several words of memory, and dealing with signed integers. We will need to upgrade the memory to reference individual bytes of memory for the next project instead of words of memory.
 
+###### MIPS in general ######
 
-###### Instruction Encoding ######
-
-> With the requirment of supporting 140 operations, we were forced to have an 8 bit op code. <br/>
-> 2^7 = 128 (Not Enough)<br/>
-> 2^8 = 265 <br/>
-> At first we were concerned this was going to be the largest hurdle to overcome. It ended up being taken care of with a few well placed bit shifts. In total only about 15 lines of code took care of all the operations we needed to decode out encoding. 
+> We were very surprised to find MIPS does not have a SUBI, they just ask the programers to add a negative number. It seems very useful to have a limited set of instructions available, although it does mean you go about certain things in a very weird way.
 

@@ -204,7 +204,7 @@ void Sim::run()
 					{
 						char palin[1024];
 						string incoming_palin;
-						cout << "Please enter a word. ";
+						cout << "Please enter a word: ";
 						getline(cin, incoming_palin);
 						incoming_palin.copy(palin,1024,0);
 						//char palin[1024];
@@ -226,8 +226,8 @@ void Sim::run()
 					default:
 					{
 						cout << "Error: There was an error with the execution of SYSCALL." << endl;
-						cout << "PC: " << pc << endl;
-						cout << "Current Istruction: " << current_instruction << endl;
+						cout << "PC: " << std::hex << pc << endl;
+						cout << "Current Istruction: " <<std::hex << current_instruction << endl;
 						more_instructions = false;
 						break;
 					}
@@ -236,11 +236,13 @@ void Sim::run()
 			}
 			default:
 				cout << "Error: There was an error with the execution of loaded instruction." << endl;
-				cout << "PC: " << pc << endl;
-				cout << "Current Istruction: " << current_instruction << endl;
+				cout << "PC: " << std::hex <<pc << endl;
+				cout << "Current Istruction: " << std::hex<< current_instruction << endl;
 				more_instructions = false;
 				break;
 		}
+		registers->print_memory();
+		mem->print_memory();
 	}
 }
 
@@ -299,6 +301,8 @@ mem_addr Sim::immediate_value()									//Gives value of immediate slot, Returns
 		
 void Sim::load_next_instruction()
 {															//Reads next instruction and increments pc
+	cout << "Current Istruction: " << std::hex<< current_instruction << endl;
 	current_instruction = mem->read(pc);
+	cout << "Current Istruction: " << std::hex<< current_instruction << endl;
 	pc++;
 }
