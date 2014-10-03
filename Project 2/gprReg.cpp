@@ -81,7 +81,10 @@ void Register_Bank::print_memory()										//To give a visual of the Register M
 	cout <<	"==== REGISTERS ======================" << endl;
 	while (memory_index < REGISTER_LENGTH)
 	{
-		cout << memory_index << ":  " << std::dec << registers[memory_index] << endl;
+		if (registers[memory_index] != 0)
+		{
+			cout << memory_index << ":  " << std::dec << registers[memory_index] << endl;
+		}
 		memory_index++;
 	}
 	cout <<	"==========================" << endl;

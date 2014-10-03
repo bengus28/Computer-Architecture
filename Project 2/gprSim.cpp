@@ -60,24 +60,14 @@ void Sim::run()
 	int total_cycles_spent = 0;
 	while(more_instructions)
 	{
-		if(total_instructions_executed > 6)
-		{
-			more_instructions = false;
-		}
+		//if(total_instructions_executed > 6)
+		//{
+		//	more_instructions = false;
+		//}
 		load_next_instruction();
 		switch(instruction_op())
 		{
-			case 1:	//LOAD
-			{
-				cout << "Error: LOAD Instruction not implemented." << endl;
-				break;
-			}
-			case 2:	//STORE
-			{
-				cout << "Error: STORE Instruction not implemented." << endl;
-				break;
-			}
-			case 3: //ADDI ADD IMMEDIATE 
+			case 1: //ADDI ADD IMMEDIATE 
 			{
 				int8_t immediate = third_register();
 				uint32_t register_value = registers->read(second_register());
@@ -91,7 +81,7 @@ void Sim::run()
 				total_cycles_spent += 6;
 				break;
 			}
-			case 4: //B BRANCH
+			case 2: //B BRANCH
 			{
 				int8_t label_offset =0;
 				label_offset = third_register();
@@ -101,7 +91,7 @@ void Sim::run()
 				total_cycles_spent += 4;
 				break;
 			}
-			case 5: //BEQZ BRACH IF EQUAL TO ZERO
+			case 3: //BEQZ BRACH IF EQUAL TO ZERO
 			{
 				int8_t label_offset =0;
 				if (second_register() == 0)
@@ -114,7 +104,7 @@ void Sim::run()
 				total_cycles_spent += 5;
 				break;
 			}
-			case 6: //BGE BRANCH IF GREATER OR EQUAL $t0,$t1,target,  $t0 >= $t1
+			case 4: //BGE BRANCH IF GREATER OR EQUAL $t0,$t1,target,  $t0 >= $t1
 			{
 				int8_t label_offset =0;
 				if ( registers->read(first_register())  >=  registers->read(second_register()))
@@ -127,7 +117,7 @@ void Sim::run()
 				total_cycles_spent += 5;
 				break;
 			}
-			case 7: //BNE BRANCH IF NOT EQUAL  $t0,$t1,target, $t0 <> $t1
+			case 5: //BNE BRANCH IF NOT EQUAL  $t0,$t1,target, $t0 <> $t1
 			{
 				int8_t label_offset =0;
 				if ( registers->read(first_register())  !=  registers->read(second_register()))
@@ -140,7 +130,7 @@ void Sim::run()
 				total_cycles_spent += 5;
 				break;
 			}
-			case 8: //LA LOAD ADDRESS
+			case 6: //LA LOAD ADDRESS
 			{
 				bool success = registers->write(first_register(),immediate_value());
 				if (false == success)
@@ -152,11 +142,12 @@ void Sim::run()
 				total_cycles_spent += 5;
 				break;
 			}
-			case 9: //LB LOAD BYTE
+			case 7: //LB LOAD BYTE
 			{
 				mem_addr address_value = registers->read(second_register()); 		//number of bytes
 				int8_t immediate = third_register();
 				address_value += immediate;
+				cout << "ADDr Value: "<<std::dec << address_value << endl;
 				bool success = registers->write(first_register(),mem->read_byte(address_value, address_value%4) );
 				if (false == success)
 				{
@@ -167,7 +158,7 @@ void Sim::run()
 				total_cycles_spent += 6;
 				break;
 			}
-			case 10: //LI LOAD IMMEDIATE 
+			case 8: //LI LOAD IMMEDIATE 
 			{
 				bool success = registers->write(first_register(), second_register());
 				if (false == success)
@@ -179,7 +170,7 @@ void Sim::run()
 				total_cycles_spent += 3;
 				break;
 			}
-			case 11: //SUBI SUBTRACT IMMEDIATE
+			case 9: //SUBI SUBTRACT IMMEDIATE
 			{
 				int8_t immediate = third_register();
 				uint32_t register_value = registers->read(second_register());
@@ -192,7 +183,7 @@ void Sim::run()
 				total_cycles_spent += 6;
 				break;
 			}
-			case 12: //SYSCALL
+			case 10: //SYSCALL
 			{
 				total_instructions_executed += 1;
 				total_cycles_spent += 8;
@@ -211,7 +202,15 @@ void Sim::run()
 						cout << "Please enter a word: ";
 						getline(cin, incoming_palin);
 						incoming_palin.copy(palin,1024,0);
-						//char palin[1024];
+						int len=strlen(palin);
+//					    char temp;
+//					    for (int i=0;i<len/2;i++)
+//					    {
+//					            temp=palin[i];
+//					            palin[i]=palin[len-i-1];
+//					            palin[len-i-1]=temp;
+//					    }
+						palin[len] = '\0';
 						//cin >> *palin >> "\0";
 						mem->load_string(registers->read(1),palin);
 						break;
@@ -238,6 +237,17 @@ void Sim::run()
 				}
 				break;
 			}
+			case 11:	//LOAD
+			{
+				cout << "Error: LOAD Instruction not implemented." << endl;
+				break;
+			}
+			case 12:	//STORE
+			{
+				cout << "Error: STORE Instruction not implemented." << endl;
+				break;
+			}
+			
 			default:
 				cout << "Error: There was an error with the execution of loaded instruction." << endl;
 				cout << "PC: " << std::hex <<pc << endl;

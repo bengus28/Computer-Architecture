@@ -54,6 +54,7 @@ private:
 	int text_next_open_memory_location;								//Internal counter for text_segment
 	int length_of_string(mem_addr memory_address_in, int max_length);//Helper to find the end of string in memory.
 	mem_addr mem_byte(instruction data_in,int byte_number);		//returns a byte inside the instruction.
+	mem_addr mem_byte_string(instruction data_in,int byte_number);  //returns a byte for a string.
 };
 
 
@@ -402,12 +403,52 @@ mem_addr Memory::mem_byte(instruction data_in, int byte_number)
 	return 0;
 } 
 
+mem_addr Memory::mem_byte_string(instruction data_in, int byte_number)
+{																//Returns a byte inside the instruction.					
+	if (byte_number < 5 && byte_number > 0)
+	{
+		byte_number --;
+		switch(byte_number)
+		{
+			case 0:
+			{
+				byte_number =3;
+				break;
+			}
+			case 1:
+			{
+				byte_number =2;
+				break;
+			}
+			case 2:
+			{
+				byte_number =1;
+				break;
+			}
+			case 3:
+			{
+				byte_number =0;
+				break;
+			}
+			default:
+				break;
+		}
+		instruction data;
+		data = data_in;
+		data = data << 8*byte_number;
+		data = data >> 24;
+		return data;
+	}
+	cout << "Error: Memory STRING byte read" << endl;
+	return 0;
+} 
+
 mem_addr Memory::read_byte(mem_addr memory_address_in, int byte)
 {
 	mem_addr memory_copy_bin = memory_address_in, memory_copy_index = memory_address_in;
 	int memory_index = (int) decode_address_index(memory_copy_index);
 	memory_index = (int) floor(memory_index/4.0);	
-	mem_addr memory_value;
+	mem_addr memory_value=0;
 	switch(decode_address_bin(memory_copy_bin))
 	{
 	case 1:
@@ -439,7 +480,9 @@ mem_addr Memory::read_byte(mem_addr memory_address_in, int byte)
 			memory_value= stack_top;														//Not in current memory space
 		break;
 	}
-	return mem_byte(memory_value, byte);
+	cout << "Byte value: " << byte+1 << endl;
+	cout << "MEM value: " << std::dec<< memory_index <<endl;
+	return mem_byte_string(memory_value, byte+1);
 }
 		
 void Memory::print_memory()									//To give a visual of the memory space
@@ -458,17 +501,17 @@ void Memory::print_memory()									//To give a visual of the memory space
 	cout <<	"==== DATA ======================" << endl;
 	while (memory_index < DATA_LENGTH)
 	{
-		cout << "  " << data_segment[memory_index] << endl;
+		cout << memory_index <<":  " << data_segment[memory_index] << endl;
 		memory_index++;
 	}
 	cout <<	"==========================" << endl;
 //stack
-	memory_index = 0;
-	cout <<	"==== STACK ========================================================" << endl;
-	while (memory_index < STACK_LENGTH)
-	{
-		cout << "  " << std::dec << stack_segment[memory_index] << endl;
-		memory_index++;
-	}
-	cout <<	"==========================" << endl;
+//	memory_index = 0;
+//	cout <<	"==== STACK ========================================================" << endl;
+//	while (memory_index < STACK_LENGTH)
+//	{
+//		cout << "  " << std::dec << stack_segment[memory_index] << endl;
+//		memory_index++;
+//	}
+//	cout <<	"==========================" << endl;
 }
