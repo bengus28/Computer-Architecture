@@ -197,11 +197,11 @@ void Sim::run()
 				total_instructions_executed += 1;
 				total_cycles_spent += 8;
 				
-				switch(registers->read(20))
+				switch(registers->read(3))
 				{
 					case 4:	//Print String 
 					{
-						cout << "Str read:" << mem->read_string(registers->read(0)) << endl;
+						cout << "Str read:" << mem->read_string(registers->read(1)) << endl;
 						break;
 					}
 					case 8:	//Read String In
@@ -213,7 +213,7 @@ void Sim::run()
 						incoming_palin.copy(palin,1024,0);
 						//char palin[1024];
 						//cin >> *palin >> "\0";
-						mem->load_string(registers->read(0),palin);
+						mem->load_string(registers->read(1),palin);
 						break;
 					}
 					case 10:// End Program
@@ -305,8 +305,12 @@ mem_addr Sim::immediate_value()									//Gives value of immediate slot, Returns
 		
 void Sim::load_next_instruction()
 {															//Reads next instruction and increments pc
-	cout << "Current Istruction: " << std::hex<< current_instruction << endl;
 	current_instruction = mem->read(pc);
 	cout << "Current Istruction: " << std::hex<< current_instruction << endl;
+	cout << "OP: " << std::hex << instruction_op() << endl;
+	cout << "first: " << std::hex << first_register() << endl;
+	cout << "second: " << std::hex << second_register() << endl;
+	cout << "thrid: " << std::hex << third_register() << endl;
+	
 	pc++;
 }
