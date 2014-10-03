@@ -50,6 +50,13 @@ Sim::Sim()
 
 void Sim::run()
 {
+//	char palin[50] = "The string is a palindrome.\n";
+//	char palin2[70] = "The string is NOT a palindrome.\n";
+//	mem->load_string(0x00200000,palin);
+//	cout << "Str read:" << mem->read_string(0x00200000) << endl;
+//	mem->load_string(0x00300000,palin2);
+//	cout << "Str read:" << mem->read_string(0x00300000) << endl;
+
 	bool more_instructions = true;
 	int total_instructions_executed = 0;
 	int total_cycles_spent = 0;
@@ -70,12 +77,12 @@ void Sim::run()
 			}
 			case 3: //ADDI ADD IMMEDIATE 
 			{
-				uint32_t immediate = immedidate_value();
-				uint32_t register_value = registers.read(second_register());
-				bool success = registers.write(first_register(), immediate + register_value);
+				uint32_t immediate = immediate_value();
+				uint32_t register_value = registers->read(second_register());
+				bool success = registers->write(first_register(), immediate + register_value);
 				if (false == success)
 				{
-					cout << "Error: Adding value to register: << std:dec << second_register() << endl;
+					cout << "Error: Adding value to register: "<< std::dec << second_register() << endl;
 				}
 				total_instructions_executed += 1;
 				total_cycles_spent += 6;
@@ -132,12 +139,12 @@ void Sim::run()
 			}
 			case 11: //SUBI SUBTRACT IMMEDIATE
 			{
-				uint32_t immediate = immedidate_value();
-				uint32_t register_value = registers.read(second_register());
-				bool success = registers.write(first_register(), register_value - immediate);
+				uint32_t immediate = immediate_value();
+				uint32_t register_value = registers->read(second_register());
+				bool success = registers->write(first_register(), register_value - immediate);
 				if (false == success)
 				{
-					cout << "Error: Adding value to register: << std:dec << second_register() << endl;
+					cout << "Error: Adding value to register: "<< std::dec << second_register() << endl;
 				}
 				total_instructions_executed += 1;
 				total_cycles_spent += 6;
@@ -148,7 +155,7 @@ void Sim::run()
 				total_instructions_executed += 1;
 				total_cycles_spent += 8;
 				
-				switch(registers.read(0))
+				switch(registers->read(0))
 				{
 					case 4:	//Print String 
 					{

@@ -43,11 +43,15 @@ public:
 	bool load_data(mem_addr memory_address_in, mem_addr data);		//Loads from .data section
     bool write(mem_addr memory_address_in, mem_addr data);			//Writes to stack section
     mem_addr * read(mem_addr memory_address_in);					//Reads based on given memory address
+    bool load_string(mem_addr m_add, char string_to_be_stored[]);	//Write given string to memory
+    string read_string(mem_addr memory_address);					//Read a string from memory
     void print_memory();											//Prints out current memory state
 private:
 	int decode_address_bin(mem_addr memory_address_in);				//Helps decode address into bin
 	int decode_address_index(mem_addr memory_address_in);			//Helps decode address into array index
 	int text_next_open_memory_location;								//Internal counter for text_segment
+	int length_of_string(mem_addr memory_address_in, int max_length);//Helper to find the end of string in memory.
+	mem_addr byte(instruction data_in,int byte_number);		//returns a byte inside the instruction.
 };
 
 
@@ -148,7 +152,7 @@ bool Memory::write(mem_addr memory_address_in, mem_addr data)
 	case 3:
 		{
 			int memory_index = (int) decode_address_index(memory_copy_index);
-			if (text_next_open_memory_location < STACK_LENGTH)						//Checks memory length
+			if (memory_index < STACK_LENGTH)										//Checks memory length
 			{
 				stack_segment[memory_index] = data;									//Store data in stack
 				return true;
@@ -187,7 +191,7 @@ mem_addr * Memory::read(mem_addr memory_address_in )
 	case 2:
 		{
 			int memory_index = (int) decode_address_index(memory_copy_index);
-			if (text_next_open_memory_location < DATA_LENGTH)						//Checks data memory length
+			if (memory_index < DATA_LENGTH)											//Checks data memory length
 			{
 				return &data_segment[memory_index];									
 			}
@@ -196,7 +200,7 @@ mem_addr * Memory::read(mem_addr memory_address_in )
 	case 3:
 		{
 			int memory_index = (int) decode_address_index(memory_copy_index);
-			if (text_next_open_memory_location < STACK_LENGTH)						//Checks stack memory length
+			if (memory_index < STACK_LENGTH)										//Checks stack memory length
 			{
 				return &stack_segment[memory_index];									
 			}
@@ -230,7 +234,166 @@ int Memory::decode_address_index(mem_addr memory_address_in)
 	return memory_address_in;
 }
 
-void Memory::print_memory()										//To give a visual of the memory space
+bool Memory::load_string(mem_addr m_add, char string_to_be_stored[])	//Write given string to memory
+{
+	switch(decode_address_bin(m_add))
+	{
+		case 1: //TEXT 
+		{ 
+			cout << "Error: There was an error loading your string into TEXT segment of memory." << endl;
+			return false;
+		}
+		case 2: //DATA
+		{ 
+			int data_index = decode_address_index(m_add);
+			if (data_index < DATA_LENGTH)											
+			{
+				memcpy(&data_segment[data_index], string_to_be_stored,  strlen(string_to_be_stored)+1);
+				return true;									
+			}
+			return false;
+		}
+		case 3: //STACK
+		{ 
+			int data_index = decode_address_index(m_add);
+			if (data_index < STACK_LENGTH)											
+			{
+				memcpy(&stack_segment[data_index], string_to_be_stored,  strlen(string_to_be_stored)+1);
+				return true;
+			}
+			return false;
+		}
+		default :
+		{
+			cout << "Error: There was an error loading your string into memory, Bin not selected" << endl;
+			return false;
+		}
+	}
+	cout << "Error: There was an error loading your string into memory" << endl;
+	return false;
+}
+
+string Memory::read_string(mem_addr memory_address)
+{
+	switch(decode_address_bin(memory_address))
+	{
+		case 1: //TEXT 
+		{ 
+			cout << "Error: There was an error loading your string into TEXT segment of memory." << endl;
+			return "Error";
+		}
+		case 2: //DATA
+		{ 
+			int data_index = decode_address_index(memory_address);
+			char *data_out;
+			data_out = (char*) malloc( length_of_string(memory_address, 2000));
+			if (data_index < DATA_LENGTH)											
+			{
+				memcpy(data_out, &data_segment[data_index],  length_of_string(memory_address, 2000));
+				return string(data_out);									
+			}
+			return "Error";
+		}
+		case 3: //STACK
+		{ 
+			int data_index = decode_address_index(memory_address);
+			char *data_out;
+			data_out = (char*) malloc( length_of_string(memory_address, 2000));
+			if (data_index < STACK_LENGTH)											
+			{
+				memcpy(data_out, &stack_segment[data_index],  length_of_string(memory_address, 2000));
+				return string(data_out);									
+			}
+			return "Error";
+		}
+		default :
+		{
+			cout << "Error: There was an error loading your string into memory, Bin not selected" << endl;
+			return "Error";
+		}
+	}
+	cout << "Error: There was an error loading your string into memory" << endl;
+	return "Error";
+}
+
+int Memory::length_of_string(mem_addr memory_address_in, int max_length)			//Helper to find the end of string in memory.
+{
+	switch(decode_address_bin(memory_address_in))
+	{
+		case 1: //TEXT 
+		{ 
+			cout << "Error: There was an error finding the length of a string in TEXT segment of memory." << endl;
+			return 0;
+		}
+		case 2: //DATA
+		{ 
+			int data_index = decode_address_index(memory_address_in);
+			if (data_index < DATA_LENGTH)											//Checks data memory length
+			{
+				bool end_not_found = true;
+				int length =0;
+				mem_addr current_byte=0;
+				while(end_not_found && length < max_length)
+				{
+					current_byte = byte( data_segment[data_index], 1+(length %4));
+					if(0 == current_byte)
+					{
+						end_not_found = false;
+					}
+					length++;
+				}
+				return length--;
+			}
+			return 0;
+		}
+		case 3: //STACK
+		{ 
+			int data_index = decode_address_index(memory_address_in);
+			if (data_index < STACK_LENGTH)											//Checks data memory length
+			{
+				bool end_not_found = true;
+				int length =0;
+				mem_addr current_byte =0;
+				while(end_not_found && length < max_length)
+				{
+					current_byte = byte(stack_segment[data_index], 1+(length %4));
+					if(0 == current_byte)
+					{
+						end_not_found = false;
+					}
+					length++;
+				}
+				return length--;
+				
+			}
+			return 0;
+		}
+		default :
+		{
+			cout << "Error: There was an error finding the length of your string, Bin not selected" << endl;
+			return 0;
+		}
+	}
+	cout << "Error: There was an error finding the length of your string in memory" << endl;
+	return 0;
+}
+
+mem_addr Memory::byte(instruction data_in, int byte_number)
+{																//Returns a byte inside the instruction.					
+	if (byte_number < 5 && byte_number > 0)
+	{
+		byte_number --;
+		instruction data;
+		data = data_in;
+		data = data << 8*byte_number;
+		data = data >> 24;
+		return data;
+	}
+	cout << "Error: Memory byte read" << endl;
+	return 0;
+}
+		
+void Memory::print_memory()									//To give a visual of the memory space
 {
 //text
 	int memory_index = 0;
