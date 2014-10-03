@@ -90,7 +90,7 @@ Memory::Memory()  													//Initialize memory
 			{
 				for (int c = 0; c < 10; c++){dataAddress[c] = textLine[c];}
 				for (int c = 0;c <40; c++){
-					if (dataArray[c] == NULL){dataArray[c] = '\0';}
+					if (dataArray[c] == '\0'){dataArray[c] = '\0';}
 					dataArray[c] = textLine[c+11];
 				}
 				hexidecimal2 = std::stoi(dataAddress.c_str(),0, 16);
