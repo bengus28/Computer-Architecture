@@ -50,18 +50,7 @@ Sim::Sim()
 
 void Sim::run()
 {
-	load_next_instruction();
-	
-	cout << "a " << std::hex << *current_instruction << endl;
-	cout << "1 " << std::hex << instruction_op() << endl;
-	cout << "2 " << std::hex << instruction_memory_address() << endl;
-	cout << "3 " << std::hex << first_register() << endl;
-	cout << "4 " << std::hex << second_register() << endl;
-	cout << "5 " << std::hex << third_register() << endl;
-	cout << "6 " << std::hex << immediate_value() << endl;
-	mem->print_memory();
-		
-	bool more_instructions = false;
+	bool more_instructions = true;
 	int total_instructions_executed = 0;
 	int total_cycles_spent = 0;
 	while(more_instructions)
@@ -81,16 +70,22 @@ void Sim::run()
 			}
 			case 3: //ADDI ADD IMMEDIATE 
 			{
+				uint32_t immediate = immedidate_value();
+				uint32_t register_value = registers.read(second_register());
+				bool success = registers.write(first_register(), immediate + register_value);
+				if (false == success)
+				{
+					cout << "Error: Adding value to register: << std:dec << second_register() << endl;
+				}
 				total_instructions_executed += 1;
 				total_cycles_spent += 6;
-				
 				break;
 			}
 			case 4: //B BRANCH
 			{
+				
 				total_instructions_executed += 1;
 				total_cycles_spent += 4;
-				
 				break;
 			}
 			case 5: //BEQZ BRACH IF EQUAL TO ZERO
@@ -130,16 +125,22 @@ void Sim::run()
 			}
 			case 10: //LI LOAD IMMEDIATE 
 			{
+				
 				total_instructions_executed += 1;
 				total_cycles_spent += 3;
-				
 				break;
 			}
 			case 11: //SUBI SUBTRACT IMMEDIATE
 			{
+				uint32_t immediate = immedidate_value();
+				uint32_t register_value = registers.read(second_register());
+				bool success = registers.write(first_register(), register_value - immediate);
+				if (false == success)
+				{
+					cout << "Error: Adding value to register: << std:dec << second_register() << endl;
+				}
 				total_instructions_executed += 1;
 				total_cycles_spent += 6;
-				
 				break;
 			}
 			case 12: //SYSCALL
@@ -147,16 +148,34 @@ void Sim::run()
 				total_instructions_executed += 1;
 				total_cycles_spent += 8;
 				
-				break;
-			}
-			case 13://END
-			{
-				more_instructions = false;
-				cout << "Ending:" << endl;
-				cout << "Number of Instructions Executed (IC): " << total_instructions_executed << endl;
-				cout << "Number of Cycles Spent in Execution (C):" << total_cycles_spent << endl;
-				cout << "Speed-up:" << (8*total_instructions_executed) / total_cycles_spent << endl;
-				cout << "Goodbye: Program is ending." << endl;
+				switch(registers.read(0))
+				{
+					case 4:	//Print String 
+					{
+						
+						break;
+					}
+					case 8:	//Read String In
+					{
+						
+						break;
+					}
+					case 10:// End Program
+					{
+						more_instructions = false;
+						cout << "Ending:" << endl;
+						cout << "Number of Instructions Executed (IC): " << total_instructions_executed << endl;
+						cout << "Number of Cycles Spent in Execution (C):" << total_cycles_spent << endl;
+						cout << "Speed-up:" << (8*total_instructions_executed) / total_cycles_spent << endl;
+						cout << "Goodbye: Program is ending." << endl;
+						break;
+					}
+					default:
+					{
+						cout << "Error: There was an error with the execution of SYSCALL." << endl;
+						break;
+					}
+				}
 				break;
 			}
 			default:
