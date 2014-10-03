@@ -65,40 +65,45 @@ Memory::Memory()  													//Initialize memory
 	int hexidecimal;
 	int hexidecimal2;
 	int hexidecimal3;
-	string line;
-	string line2 = "0000000000";
-	string line3 = "0";
+	string textLine;
+	string dataAddress = "0000000000";
+	string data = "0000000000000000000000000000000000000";
+	char dataArray[37];
 	int i = 0;
-	ifstream accum_file_code ("accumCode.txt");
-	if (accum_file_code.is_open())
+	ifstream gpr_file_code ("gprCode.txt");
+	if (gpr_file_code.is_open())
 	{
-		while ( getline (accum_file_code,line))
+		while ( getline (gpr_file_code,textLine))
 		{
-			if (line == ""){continue;}
-			if (line == ".data"){i = 1; continue;}
-			if (line == ".text"){continue;}	
+			if (textLine == ""){continue;}
+			if (textLine == ".data"){i = 1; continue;}
+			if (textLine == ".text"){continue;}	
 			if (i == 0) 												//Text
 			{
-				hexidecimal = std::stoi(line.c_str(),0, 16);
-				load_code(hexidecimal);
+				hexidecimal = std::stoi(textLine.c_str(),0, 16);
+				cout << textLine + "\n";
+				//read_string(hexidecimal);
 			}
 			if (i == 1) 												//Data
 			{
-				for (int c = 0; c < 10; c++)
-				{
-					line2[c] = line[c];
-					line3[0] = line[11];
+				for (int c = 0; c < 10; c++){dataAddress[c] = textLine[c];}
+				for (int c = 0;c < 37; c++){
+					if (data[c] == NULL){data[c] = 0;}
+					data[c] = textLine[c+11];
 				}
-				hexidecimal2 = std::stoi(line2.c_str(),0, 16);
-				hexidecimal3 = atoi(line3.c_str());
-				load_data(hexidecimal2,hexidecimal3);
+				hexidecimal2 = std::stoi(dataAddress.c_str(),0, 16);
+				hexidecimal3 = atoi(data.c_str());
+				cout << dataAddress + "\n";
+				cout << data + "\n";
+				//load_string(hexidecimal2, hexidecimal3)
+				
 			}	
 		}
 	}
 	else{
 		cout << "Error: Unable to open file."; 
 	}
-	accum_file_code.close();
+	gpr_file_code.close();
 }
 
 
