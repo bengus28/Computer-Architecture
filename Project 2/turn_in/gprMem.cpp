@@ -6,6 +6,7 @@
 ********/
 
 #include <cstdlib>
+#include <cstdint>
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
