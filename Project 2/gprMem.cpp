@@ -184,8 +184,6 @@ bool Memory::write(mem_addr memory_address_in, mem_addr data)
 mem_addr * Memory::read(mem_addr memory_address_in)
 {	
 	mem_addr memory_copy_bin = memory_address_in, memory_copy_index = memory_address_in;
-	cout <<  "read bin: "<< decode_address_bin(memory_copy_bin) << endl;
-	cout <<  "read index: "<< std::dec<< decode_address_index(memory_copy_index) << endl;
 	switch(decode_address_bin(memory_copy_bin))
 	{
 	case 1:
@@ -257,7 +255,7 @@ bool Memory::load_string(mem_addr m_add, char string_to_be_stored[])	//Write giv
 			int data_index = decode_address_index(m_add);
 			if (data_index < DATA_LENGTH)											
 			{
-				
+				memset(&data_segment[data_index], 0, strlen(string_to_be_stored)+5);
 				memcpy(&data_segment[data_index], string_to_be_stored,  strlen(string_to_be_stored)+1);
 				return true;									
 			}
@@ -268,6 +266,7 @@ bool Memory::load_string(mem_addr m_add, char string_to_be_stored[])	//Write giv
 			int data_index = decode_address_index(m_add);
 			if (data_index < STACK_LENGTH)											
 			{
+				memset(&data_segment[data_index], 0, strlen(string_to_be_stored)+5);
 				memcpy(&stack_segment[data_index], string_to_be_stored,  strlen(string_to_be_stored)+1);
 				return true;
 			}
@@ -480,8 +479,6 @@ mem_addr Memory::read_byte(mem_addr memory_address_in, int byte)
 			memory_value= stack_top;														//Not in current memory space
 		break;
 	}
-	cout << "Byte value: " << byte+1 << endl;
-	cout << "MEM value: " << std::dec<< memory_index <<endl;
 	return mem_byte_string(memory_value, byte+1);
 }
 		

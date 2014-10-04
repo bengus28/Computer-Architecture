@@ -30,6 +30,7 @@ private:
 	instruction *current_instruction;			//Pointer to the current instruction
 	Memory *mem;								//Memory object
 	Register_Bank *registers;					//CPU internal registers
+	int8_t signed_immediate(mem_addr m_addr);   //return a sgined value;
 };
 
 int main()
@@ -48,28 +49,18 @@ Sim::Sim()
 
 void Sim::run()
 {
-//	char palin[50] = "The string is a palindrome.\n";
-//	char palin2[70] = "The string is NOT a palindrome.\n";
-//	mem->load_string(0x00200000,palin);
-//	cout << "Str read:" << mem->read_string(0x00200000) << endl;
-//	mem->load_string(0x00300000,palin2);
-//	cout << "Str read:" << mem->read_string(0x00300000) << endl;
 
 	bool more_instructions = true;
 	int total_instructions_executed = 0;
 	int total_cycles_spent = 0;
 	while(more_instructions)
 	{
-		//if(total_instructions_executed > 6)
-		//{
-		//	more_instructions = false;
-		//}
 		load_next_instruction();
 		switch(instruction_op())
 		{
 			case 1: //ADDI ADD IMMEDIATE 
 			{
-				int8_t immediate = third_register();
+				int8_t immediate = signed_immediate(third_register());
 				uint32_t register_value = registers->read(second_register());
 				bool success = registers->write(first_register(), immediate + register_value);
 				if (false == success)
@@ -84,7 +75,7 @@ void Sim::run()
 			case 2: //B BRANCH
 			{
 				int8_t label_offset =0;
-				label_offset = third_register();
+				label_offset = signed_immediate(third_register());
 				pc += label_offset;
 				
 				total_instructions_executed += 1;
@@ -94,9 +85,9 @@ void Sim::run()
 			case 3: //BEQZ BRACH IF EQUAL TO ZERO
 			{
 				int8_t label_offset =0;
-				if (second_register() == 0)
+				if (registers->read(first_register()) == 0)
 				{
-					label_offset = third_register();
+					label_offset = signed_immediate(third_register());
 					pc += label_offset;
 				}
 				
@@ -109,7 +100,7 @@ void Sim::run()
 				int8_t label_offset =0;
 				if ( registers->read(first_register())  >=  registers->read(second_register()))
 				{
-					label_offset = third_register();
+					label_offset = signed_immediate(third_register());
 					pc += label_offset;
 				}
 				
@@ -122,7 +113,7 @@ void Sim::run()
 				int8_t label_offset =0;
 				if ( registers->read(first_register())  !=  registers->read(second_register()))
 				{
-					label_offset = third_register();
+					label_offset = signed_immediate(third_register());
 					pc += label_offset;
 				}
 				
@@ -145,9 +136,8 @@ void Sim::run()
 			case 7: //LB LOAD BYTE
 			{
 				mem_addr address_value = registers->read(second_register()); 		//number of bytes
-				int8_t immediate = third_register();
+				int8_t immediate = signed_immediate(third_register());
 				address_value += immediate;
-				cout << "ADDr Value: "<<std::dec << address_value << endl;
 				bool success = registers->write(first_register(),mem->read_byte(address_value, address_value%4) );
 				if (false == success)
 				{
@@ -172,7 +162,7 @@ void Sim::run()
 			}
 			case 9: //SUBI SUBTRACT IMMEDIATE
 			{
-				int8_t immediate = third_register();
+				int8_t immediate = signed_immediate(third_register());
 				uint32_t register_value = registers->read(second_register());
 				bool success = registers->write(first_register(), register_value - immediate);
 				if (false == success)
@@ -192,24 +182,27 @@ void Sim::run()
 				{
 					case 4:	//Print String 
 					{
-						cout << "Str read:" << mem->read_string(registers->read(1)) << endl;
+						cout << mem->read_string(registers->read(1)) << endl;
 						break;
 					}
 					case 8:	//Read String In
 					{
 						char palin[1024];
 						string incoming_palin;
+						
+						int length=1024;
+					    for (int i=0;i<1024;i++)
+					    {
+					            palin[i]=0;
+					    }
+						
 						cout << "Please enter a word: ";
 						getline(cin, incoming_palin);
 						incoming_palin.copy(palin,1024,0);
+						
+						
+						
 						int len=strlen(palin);
-//					    char temp;
-//					    for (int i=0;i<len/2;i++)
-//					    {
-//					            temp=palin[i];
-//					            palin[i]=palin[len-i-1];
-//					            palin[len-i-1]=temp;
-//					    }
 						palin[len] = '\0';
 						//cin >> *palin >> "\0";
 						mem->load_string(registers->read(1),palin);
@@ -218,12 +211,11 @@ void Sim::run()
 					case 10:// End Program
 					{
 						more_instructions = false;
-						cout << " " <<endl;
-						cout << "Ending:" << endl;
-						cout << "Number of Instructions Executed (IC): " << total_instructions_executed << endl;
-						cout << "Number of Cycles Spent in Execution (C):" << total_cycles_spent << endl;
-						cout << "Speed-up:" << (8*total_instructions_executed) / total_cycles_spent << endl;
-						cout << "Goodbye: Program is ending." << endl;
+						cout << endl;
+						cout << "Number of Instructions Executed (IC): " << std::dec<< total_instructions_executed << endl;
+						cout << "Number of Cycles Spent in Execution (C): " <<std::dec<<  total_cycles_spent << endl;
+						printf("Speed-up: %3.2F \n",(8.0*total_instructions_executed) / total_cycles_spent );
+						cout << "Goodbye." << endl;
 						break;
 					}
 					default:
@@ -249,14 +241,10 @@ void Sim::run()
 			}
 			
 			default:
-				cout << "Error: There was an error with the execution of loaded instruction." << endl;
-				cout << "PC: " << std::hex <<pc << endl;
-				cout << "Current Istruction: " << std::hex<< current_instruction << endl;
 				more_instructions = false;
 				break;
 		}
-		registers->print_memory();
-		mem->print_memory();
+
 	}
 }
 
@@ -312,15 +300,28 @@ mem_addr Sim::immediate_value()									//Gives value of immediate slot, Returns
 	memory_address = memory_address >> 16;
 	return memory_address;
 }
+
+int8_t Sim::signed_immediate(mem_addr m_addr)
+{
+	mem_addr sign_bit = m_addr, value = m_addr;
+	sign_bit = sign_bit >> 7;
+	value = value <<26;
+	value = value >>26;
+	int return_value = 0;
+	if (sign_bit == 1)
+	{
+		return_value = 0 -value;
+		return return_value;
+	}
+	else
+	{
+		return value;
+	}
+	return 0;
+}
 		
 void Sim::load_next_instruction()
 {															//Reads next instruction and increments pc
 	current_instruction = mem->read(pc);
-	cout << "Current Istruction: " << std::hex<< current_instruction << endl;
-	cout << "OP: " << std::hex << instruction_op() << endl;
-	cout << "first: " << std::hex << first_register() << endl;
-	cout << "second: " << std::hex << second_register() << endl;
-	cout << "thrid: " << std::hex << third_register() << endl;
-	
 	pc++;
 }
