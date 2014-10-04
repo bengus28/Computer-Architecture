@@ -30,7 +30,7 @@ mem_addr text_top = 0x00001000;
 mem_addr data_top = 0x00002000;
 mem_addr stack_top = 0x00003000;
 
-//Kernal data starts at mem_addr 0, ommited because we don't use it in this simulation
+//Kernal data starts at mem_addr 0, omitted because we don't use it in this simulation
 instruction text_segment[TEXT_LENGTH];
 mem_addr data_segment[DATA_LENGTH];
 mem_addr stack_segment[STACK_LENGTH];
@@ -282,8 +282,8 @@ bool Memory::load_string(mem_addr m_add, char string_to_be_stored[])	//Write giv
 	return false;
 }
 
-string Memory::read_string(mem_addr memory_address)
-{
+string Memory::read_string(mem_addr memory_address)												//Built for reading strings across memory segments.
+{	
 	switch(decode_address_bin(memory_address))
 	{
 		case 1: //TEXT 
@@ -407,7 +407,7 @@ mem_addr Memory::mem_byte_string(instruction data_in, int byte_number)
 	if (byte_number < 5 && byte_number > 0)
 	{
 		byte_number --;
-		switch(byte_number)
+		switch(byte_number)						//Had to be done because of big Indian to little Indian flip
 		{
 			case 0:
 			{
@@ -476,13 +476,13 @@ mem_addr Memory::read_byte(mem_addr memory_address_in, int byte)
 		break;
 	default:
 			cout << "Error: Memory read is not within current memory." << endl;
-			memory_value= stack_top;														//Not in current memory space
+			memory_value= stack_top;													//Not in current memory space
 		break;
 	}
 	return mem_byte_string(memory_value, byte+1);
 }
 		
-void Memory::print_memory()									//To give a visual of the memory space
+void Memory::print_memory()																//To give a visual of the memory space
 {
 //text
 	int memory_index = 0;
@@ -503,12 +503,12 @@ void Memory::print_memory()									//To give a visual of the memory space
 	}
 	cout <<	"==========================" << endl;
 //stack
-//	memory_index = 0;
-//	cout <<	"==== STACK ========================================================" << endl;
-//	while (memory_index < STACK_LENGTH)
-//	{
-//		cout << "  " << std::dec << stack_segment[memory_index] << endl;
-//		memory_index++;
-//	}
-//	cout <<	"==========================" << endl;
+	memory_index = 0;
+	cout <<	"==== STACK ========================================================" << endl;
+	while (memory_index < STACK_LENGTH)
+	{
+		cout << "  " << std::dec << stack_segment[memory_index] << endl;
+		memory_index++;
+	}
+	cout <<	"==========================" << endl;
 }

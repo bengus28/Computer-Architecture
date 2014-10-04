@@ -191,17 +191,13 @@ void Sim::run()
 						string incoming_palin;
 						
 						int length=1024;
-					    for (int i=0;i<1024;i++)
+					    for (int i=0;i<1024;i++)		// clear mem
 					    {
 					            palin[i]=0;
 					    }
-						
 						cout << "Please enter a word: ";
 						getline(cin, incoming_palin);
 						incoming_palin.copy(palin,1024,0);
-						
-						
-						
 						int len=strlen(palin);
 						palin[len] = '\0';
 						//cin >> *palin >> "\0";
@@ -239,12 +235,10 @@ void Sim::run()
 				cout << "Error: STORE Instruction not implemented." << endl;
 				break;
 			}
-			
 			default:
 				more_instructions = false;
 				break;
 		}
-
 	}
 }
 
@@ -301,7 +295,7 @@ mem_addr Sim::immediate_value()									//Gives value of immediate slot, Returns
 	return memory_address;
 }
 
-int8_t Sim::signed_immediate(mem_addr m_addr)
+int8_t Sim::signed_immediate(mem_addr m_addr)				//Helper method for handling immediates and signing them correctly
 {
 	mem_addr sign_bit = m_addr, value = m_addr;
 	sign_bit = sign_bit >> 7;

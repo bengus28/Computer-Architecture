@@ -87,5 +87,9 @@ This is where the beginning information is provided for the computation.
 
 ###### MIPS in general ######
 
+> We ran into a bug where the 32bit integer notation actually flipped the way the characters were stored. Some special functions had to be built to retrieve strings. 
+
+###### MIPS in general ######
+
 > We were very surprised to find MIPS does not have a SUBI, they just ask the programers to add a negative number. It seems very useful to have a limited set of instructions available, although it does mean you go about certain things in a very weird way.
 

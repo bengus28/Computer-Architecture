@@ -43,7 +43,7 @@ Register_Bank::Register_Bank()  													//Initialize memory
 	//empty on purpose
 }
 
-bool Register_Bank::write(mem_addr memory_address_in, mem_addr data)
+bool Register_Bank::write(mem_addr memory_address_in, mem_addr data)		//Allows to right to registers
 {
 	if (memory_address_in > REGISTER_LENGTH)
 	{
@@ -60,7 +60,7 @@ bool Register_Bank::write(mem_addr memory_address_in, mem_addr data)
 }
 
 
-mem_addr Register_Bank::read(mem_addr memory_address_in )
+mem_addr Register_Bank::read(mem_addr memory_address_in )					//Allows cpu to read registers 
 {
 	if (memory_address_in > REGISTER_LENGTH)
 	{
