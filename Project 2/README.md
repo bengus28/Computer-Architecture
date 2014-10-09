@@ -1,7 +1,7 @@
 Computer-Architecture
 =====================
 - COMP 4300 
-- Project 1, Group 1
+- Project 2, Group 1
 - Ben Gustafson, BRG0005
 - John Riddell, JPR0014
 
