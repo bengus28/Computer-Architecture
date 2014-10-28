@@ -7,13 +7,13 @@ CFLAGS=-c
 all: pipeLineSimulator.o
 
 pipeLineSimulator.o:  pipeMem.o pipeReg.o pipeSim.cpp
-	$(CC) pipeSim.cpp -o pipeSimulator.o
+	$(CC) -std=c++0x pipeSim.cpp -o pipeSimulator.o
 
 pipeMem.o: pipeLineMem.cpp
-	$(CC) $(CFLAGS) pipeLineMem.cpp -o pipeMem.o
+	$(CC) $(CFLAGS) -std=c++0x pipeLineMem.cpp -o pipeMem.o
 
 pipeReg.o: pipeLineReg.cpp
-	$(CC) $(CFLAGS) pipeLineReg.cpp -o pipeReg.o
+	$(CC) $(CFLAGS) -std=c++0x pipeLineReg.cpp -o pipeReg.o
 
 clean:
 	rm pipeSimulator.o pipeMem.o pipeReg.o
