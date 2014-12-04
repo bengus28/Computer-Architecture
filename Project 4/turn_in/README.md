@@ -53,3 +53,5 @@ This is where the beginning information is provided for the computation.
 
 
 ###### This was hard ######
+
+#"Real Programmers confuse Halloween and Christmas, because dec 25 == oct 31."
