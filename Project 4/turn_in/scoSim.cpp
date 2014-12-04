@@ -1,6 +1,6 @@
 /*******
-	General Purpose Register Machine Simulation
-	10/23/14
+	General Purpose Register Machine Simulation - Pipe Line with a Scoreboard
+	12/6/14
 	Ben Gustafson
 	COMP 4300
 ********/
@@ -8,8 +8,9 @@
 #include <cstdlib>
 #include <stdio.h>
 #include <iostream>
-#include "pipeLineMem.cpp"
-#include "pipeLineReg.cpp"
+#include "scoMem.cpp"
+#include "scoReg.cpp"
+#include "scoRegFloat.cpp"
 
 using namespace std;
 
@@ -77,6 +78,7 @@ private:
 	instruction *current_instruction;			//Pointer to the current instruction
 	Memory *mem;								//Memory object
 	Register_Bank *registers;					//CPU internal registers
+	Floating_Point_Register_Bank *floating_registers;
 	int8_t signed_immediate(mem_addr m_addr);   //return a sgined value;
 	void print_buffers();
 	void IF_();
@@ -117,6 +119,7 @@ Sim::Sim()
 	pc = text_top;
 	mem = new Memory();
 	registers = new Register_Bank();
+	floating_registers = new Floating_Point_Register_Bank();
 	more_instructions = true;
 	total_instructions_executed = 0;
 	total_cycles_spent = 0;

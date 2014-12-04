@@ -1,6 +1,6 @@
 /*******
 	General Purpose Register Machine Registers Simulation
-	10/23/14
+	12/6/14
 	Ben Gustafson
 	COMP 4300
 ********/

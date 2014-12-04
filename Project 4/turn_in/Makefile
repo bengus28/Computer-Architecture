@@ -6,14 +6,17 @@ CFLAGS=-c
 
 all: scoreboardSimulator.o
 
-scoreboardSimulator.o:  scoMem.o scoReg.o scoSim.cpp
-	$(CC) -std=c++0x scoSim.cpp -o scoSimulator.o
+scoreboardSimulator.o:  scoMem.o scoReg.o scoRegFloat.o scoSim.cpp
+	$(CC) -std=c++0x scoSim.cpp -o scoreboardSimulator.o
 
-scoMem.o: scoLineMem.cpp
-	$(CC) $(CFLAGS) -std=c++0x scoLineMem.cpp -o scoMem.o
+scoMem.o: scoMem.cpp
+	$(CC) $(CFLAGS) -std=c++0x scoMem.cpp -o scoMem.o
 
-scoReg.o: scoLineReg.cpp
-	$(CC) $(CFLAGS) -std=c++0x scoLineReg.cpp -o scoReg.o
+scoReg.o: scoReg.cpp
+	$(CC) $(CFLAGS) -std=c++0x scoReg.cpp -o scoReg.o
+
+scoRegFloat.o: scoRegFloat.cpp
+	$(CC) $(CFLAGS) -std=c++0x scoRegFloat.cpp -o scoRegFloat.o
 
 clean:
-	rm scoreboardSimulator.o scoMem.o scoReg.o
+	rm scoreboardSimulator.o scoMem.o scoReg.o scoRegFloat.o
