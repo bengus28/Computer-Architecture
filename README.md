@@ -62,11 +62,12 @@ Project 4
 We took the five state pile line machine and added a scoreboard, floating point registers, and a floating point functional units.
 
 This machine has:
-    *A variable fetch buffer
-    *Two-stage piple-lined integer ALU
-    *Two-stage piple-lined floating point adder
-    *Six-stage piple-lined floating point multiplier
-    *A memory functional unit (Load and Store)
+
+    * A variable fetch buffer
+    * Two-stage piple-lined integer ALU
+    * Two-stage piple-lined floating point adder
+    * Six-stage piple-lined floating point multiplier
+    * A memory functional unit (Load and Store)
 
 Currently the default program is a dual-tone multifrequency (DTMF) calculator. It is how the frequency (read tone) of each number on the dial pad for a phone number is calculated.
 
