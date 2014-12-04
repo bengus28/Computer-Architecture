@@ -34,7 +34,7 @@ To run each machine, look at the readme file in project 1 folder!
 
 Happy simulating
 
-#"long time; /* know C? */"
+**"long time; /* know C? */"**
 
 Project 2
 -------------
@@ -43,7 +43,7 @@ We have upgraded our single register accumulator to a functioning MIPS machine. 
 
 The written code evaluates if an entered word is a palindrome or not. Our machine uses a hex interpreter to load code.
 
-#"Unprecedented performance: Nothing ever ran this slow before."
+**"Unprecedented performance: Nothing ever ran this slow before."**
 
 Project 3
 -------------
@@ -54,7 +54,7 @@ We added a forwarding unit. By default the machine produces some statistics abou
 
 When in doubt: add NOPs.
 
-#"Any sufficiently advanced bug is indistinguishable from a feature."
+**"Any sufficiently advanced bug is indistinguishable from a feature."**
 
 Project 4
 -------------
@@ -70,9 +70,9 @@ This machine has:
 
 Currently the default program is a dual-tone multifrequency (DTMF) calculator. It is how the frequency (read tone) of each number on the dial pad for a phone number is calculated.
 
-#"Real Programmers confuse Halloween and Christmas, because dec 25 == oct 31."
-#"The best way to accelerate an IBM is at 9.8 m/s/s."
-#"recursion (re - cur' - zhun) n. 1. (see recursion)"
+**"Real Programmers confuse Halloween and Christmas, because dec 25 == oct 31."**
+**"The best way to accelerate an IBM is at 9.8 m/s/s."**
+**"recursion (re - cur' - zhun) n. 1. (see recursion)"**
 
 
 WAR EAGLE
