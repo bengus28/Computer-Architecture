@@ -4,9 +4,9 @@
 CC=g++
 CFLAGS=-c
 
-all: scoreBoardSimulator.o
+all: scoreboardSimulator.o
 
-scoreBoardSimulator.o:  scoMem.o scoReg.o scoSim.cpp
+scoreboardSimulator.o:  scoMem.o scoReg.o scoSim.cpp
 	$(CC) -std=c++0x scoSim.cpp -o scoSimulator.o
 
 scoMem.o: scoLineMem.cpp
@@ -16,4 +16,4 @@ scoReg.o: scoLineReg.cpp
 	$(CC) $(CFLAGS) -std=c++0x scoLineReg.cpp -o scoReg.o
 
 clean:
-	rm scoreBoardSimulator.o scoMem.o scoReg.o
+	rm scoreboardSimulator.o scoMem.o scoReg.o
