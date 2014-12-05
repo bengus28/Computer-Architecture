@@ -12,6 +12,14 @@ In this lab we migrated a pipe line MIPS machine to a pipe line with a Scoreboar
 
 With that comes a few complications.
 
+This machine has:
+
+    * A variable fetch buffer
+    * Two-stage piple-lined integer ALU
+    * Two-stage piple-lined floating point adder
+    * Six-stage piple-lined floating point multiplier
+    * A memory functional unit (Load and Store)
+
 Program
 -------------
 
@@ -54,4 +62,4 @@ This is where the beginning information is provided for the computation.
 
 ###### This was hard ######
 
-#"Real Programmers confuse Halloween and Christmas, because dec 25 == oct 31."
+**"Real Programmers confuse Halloween and Christmas, because dec 25 == oct 31."**
