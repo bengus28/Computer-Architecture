@@ -85,18 +85,13 @@ class Scoreboard
 {
 public:
     Scoreboard();
-    void print();				   							        //Prints out current score board state
+    void print();       //Prints out current score board state
+    void deep_copy(Scoreboard *score_in);
     std::vector<instruction_status_line> instruction_status;
     std::vector<fu_status_struct> fu_status;
     std::vector<int> floating_register_result_status;
     std::vector<int> int_register_result_status;
 };
-
-int main()
-{
-    Scoreboard *scor = new Scoreboard();
-    scor->print();
-}
 
 /*******
     Class Definition
@@ -195,4 +190,12 @@ void Scoreboard::print()										//To give a visual of the Register Memory spac
 
     cout <<	"**********************************************" << endl;
     cout <<	"**********************************************" << endl;
+}
+
+void Scoreboard::deep_copy(Scoreboard *score_in)
+{
+    instruction_status = score_in->instruction_status;
+    fu_status = score_in->fu_status;
+    floating_register_result_status = score_in->floating_register_result_status;
+    int_register_result_status = score_in->int_register_result_status;
 }
