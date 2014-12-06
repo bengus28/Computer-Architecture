@@ -14,7 +14,6 @@ With that comes a few complications.
 
 This machine has:
 
-    * A variable fetch buffer
     * Two-stage piple-lined integer ALU
     * Two-stage piple-lined floating point adder
     * Six-stage piple-lined floating point multiplier

@@ -63,7 +63,6 @@ We took the five state pile line machine and added a scoreboard, floating point 
 
 This machine has:
 
-    * A variable fetch buffer
     * Two-stage piple-lined integer ALU
     * Two-stage piple-lined floating point adder
     * Six-stage piple-lined floating point multiplier

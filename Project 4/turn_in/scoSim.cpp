@@ -17,49 +17,37 @@ using namespace std;
 // Press any key to continue
 void PressAnyKey(void);
 
-struct If_Id
+struct fetch_buffer
 {
-	instruction *instruction_;
-};
+	instruction instruct;
+	bool used;
+	mem_addr instruction_pc;
+}
 
-struct Id_Ex
+struct integer_instruction
 {
 	instruction op;
 	instruction instruct;
 	int8_t immediate;
-	mem_addr first_reg;
-	mem_addr second_reg;
-	mem_addr third_reg;
+	mem_addr first_reg_name;
+	mem_addr second_reg_name;
+	mem_addr third_reg_name;
 	instruction op_A;
 	instruction op_B;
 };
 
-struct Ex_Mm
+struct floating_instruction
 {
 	instruction op;
 	instruction instruct;
 	int8_t immediate;
-	mem_addr first_reg;
-	mem_addr second_reg;
-	mem_addr third_reg;
-	instruction op_A;
-	instruction op_B;
-	instruction alu_results;
+	mem_addr first_reg_name;  //A
+	mem_addr second_reg_name; //B
+	mem_addr third_reg_name;
+	float_mem op_A;
+	float_mem op_B;
 };
 
-struct Mm_Wb
-{
-	instruction op;
-	instruction instruct;
-	int8_t immediate;
-	mem_addr first_reg;
-	mem_addr second_reg;
-	mem_addr third_reg;
-	instruction op_A;
-	instruction op_B;
-	instruction alu_results;
-	instruction mem_read_results;
-};
 
 class Sim
 {
@@ -74,30 +62,27 @@ private:
 	mem_addr third_register();					//Returns bits 8-0
 	mem_addr immediate_value();					//Returns bits 16-0
 	void load_next_instruction();				//Takes all the steps to load next instruction
+	void fetch_instruction();
+	void issue_instruction();
+	void run_functional_units();
+	void write_out();
+	void floating_multiply();
+	void floating_add();
+	void integer_alu();
+	void memory_write();
 	mem_addr pc;								//Program counter
-	instruction *current_instruction;			//Pointer to the current instruction
 	Memory *mem;								//Memory object
 	Register_Bank *registers;					//CPU internal registers
 	Floating_Point_Register_Bank *floating_registers;
+	Scoreboard *scoreboard_current;
+	Scoreboard *scoreboard_next;
 	int8_t signed_immediate(mem_addr m_addr);   //return a sgined value;
 	void print_buffers();
-	void IF_();
-	void ID();
-	void EX();
-	void MM();
-	void WB();
-	If_Id new_If_Id;
-	If_Id old_If_Id;
-	Id_Ex new_Id_Ex;
-	Id_Ex old_Id_Ex;
-	Ex_Mm new_Ex_Mm;
-	Ex_Mm old_Ex_Mm;
-	Mm_Wb new_Mm_Wb;
-	Mm_Wb old_Mm_Wb;
 	bool more_instructions;
 	int total_instructions_executed;
 	int total_cycles_spent;
 	int total_nops;
+	fetch_buffer next_instruction;
 };
 
 void PressAnyKey(void)
@@ -120,18 +105,15 @@ Sim::Sim()
 	mem = new Memory();
 	registers = new Register_Bank();
 	floating_registers = new Floating_Point_Register_Bank();
+	scoreboard_current = new Score_board();
+	scoreboard_next = new Score_board();
+	fetch_buffer next_instruction = {0,0,pc};
 	more_instructions = true;
 	total_instructions_executed = 0;
 	total_cycles_spent = 0;
 	total_nops = 0;
 	new_If_Id.instruction_ =0;
 	old_If_Id.instruction_ =0;
-	Id_Ex new_Id_Ex = {0,0,0,0,0,0,0,0};
-	Id_Ex old_Id_Ex = {0,0,0,0,0,0,0,0};
-	Ex_Mm old_Ex_Mm = {0,0,0,0,0,0,0,0,0};
-	Ex_Mm new_Ex_Mm = {0,0,0,0,0,0,0,0,0};
-	Mm_Wb new_Mm_Wb = {0,0,0,0,0,0,0,0,0,0};
-	Mm_Wb old_Mm_Wb = {0,0,0,0,0,0,0,0,0,0};
 }
 
 void Sim::run()
@@ -141,34 +123,44 @@ void Sim::run()
 		//PressAnyKey();
 		//mem->print_memory();
 		//print_buffers();
-		old_If_Id = new_If_Id;
-		IF_();
-		old_Id_Ex = new_Id_Ex;
-		ID();
-		old_Ex_Mm = new_Ex_Mm;
-		EX();
-		old_Mm_Wb = new_Mm_Wb;
-		MM();
-		WB();
+		//scoreboard_current->print();
+
+		fetch_instruction();
+		issue_instruction();
+		run_functional_units();
+		write_out();
+
 		total_cycles_spent++;
+		//TODO: Check scoreboard to find if there are more instructions to run
+		//TODO: Make current scoreboard = old scoreboard
 	}
 }
 
+//=========================================================================================
+//----------------------------- Fetch Stage -----------------------------------------------
+//=========================================================================================
 /*
 Used Paramaters:
 Effected buffers:
 */
-void Sim::IF_()
+void Sim::fetch_instruction()
 {
+	//TODO: check if the fetch buffer needs to be updated. and update score board
+	//TODO: change to fetch buffer
 	new_If_Id.instruction_ = mem->read(pc);
-	pc++;
 }
+//=========================================================================================
+//----------------------------- Issue Instruciton Stage -----------------------------------
+//=========================================================================================
 /*
 Used Paramaters:
 Effected buffers:
 */
-void Sim::ID()
+void Sim::issue_instruction()
 {
+	//TODO:check scoreboard, if clear take instruction out of the fetch buffer and clear fetch buffer, increment pc
+		//read the operands and stick it in the correct buffer for functional unit and update scoreboard
+
 
 	if(old_If_Id.instruction_ != 0 ) //nop
 	{
@@ -355,12 +347,27 @@ void Sim::ID()
 			break;
 	}
 }
+
+//=========================================================================================
+//-----------------------------Functional stage--------------------------------------------
+//=========================================================================================
 /*
 Used Paramaters:
 Effected buffers:
 */
-void Sim::EX()
+void Sim::run_functional_units()
 {
+	//TODO:
+
+	floating_multiply();
+	floating_add();
+	integer_alu();
+	memory_write();
+
+
+
+
+
 	//run the instruciton
 	new_Ex_Mm.op = old_Id_Ex.op;
 	new_Ex_Mm.instruct = old_Id_Ex.instruct;
@@ -570,11 +577,14 @@ void Sim::EX()
 			break;
 	}
 }
+//=========================================================================================
+//----------------------------- Write Stage -----------------------------------------------
+//=========================================================================================
 /*
 Used Paramaters:
 Effected registers:
 */
-void Sim::MM()
+void Sim::write_out()
 {
 	//store or load from Memory
 	new_Mm_Wb.op = old_Ex_Mm.op;
@@ -728,13 +738,7 @@ void Sim::MM()
 			more_instructions = false;
 			break;
 	}
-}
-/*
-Used Paramaters:
-Effected buffers:
-*/
-void Sim::WB()
-{
+
 	//store in registers
 	switch(old_Mm_Wb.op)
 	{
@@ -874,6 +878,41 @@ void Sim::WB()
 			break;
 	}
 }
+
+//=========================================================================================
+//-----------------------------Functional untis--------------------------------------------
+//=========================================================================================
+void Sim::floating_multiply()
+{
+	//TODO: Check buffer to find new instruciton, do computaion, add to vector
+		// Go through float_mult vectror and move them one clock cycle
+		// if one has 0 clock cycles left move them to write buffer
+
+}
+void Sim::floating_add()
+{
+	//TODO: Check buffer to find new instruciton, do computaion, add to vector
+		// Go through float_add vectror and move them one clock cycle
+		// if one has 0 clock cycles left move them to write buffer
+
+
+}
+void Sim::integer_alu()
+{
+	//TODO: Check buffer to find new instruciton,, add to vector
+		// Go through int_alu vectror and move them one clock cycle
+		// if one has 0 clock cycles left,  do computaion move them to write buffer or
+	// update pc if needed (branches)
+}
+void Sim::memory_write()
+{
+	//TODO: Check buffer to find new instruciton, add to vector
+		// Go through float_mult vectror and move them one clock cycle
+		// if one has 0 clock cycles do read / store,er
+
+}
+
+
 
 int Sim::instruction_op()
 {															//Removes the memory address from instruction, bits 32-24
