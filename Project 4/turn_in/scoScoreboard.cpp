@@ -39,10 +39,10 @@ typedef uint32_t instruction;
 struct instruction_status_line
 {
     mem_addr pc;
-    mem_addr issue;
-    mem_addr read;
-    mem_addr execute_finished;
-    mem_addr write_resutls;
+    int issue;
+    int read;
+    int execute_finished;
+    int write_resutls;
 };
 
 struct instruction_struct
@@ -59,7 +59,7 @@ struct instruction_struct
     mem_addr alu_results;
     mem_addr mem_read_results;
     float_mem float_op_A;
-    float_mem float_flop_B;
+    float_mem float_op_B;
     float_mem float_alu_results;
     float_mem float_mem_read_results;
     bool used;
@@ -251,13 +251,13 @@ int Scoreboard::functional_unit_id(mem_addr op_code)
         }
         default:
             cout << "Error: There was an error with the finding a Functional Unit id." << endl;
-            cout << 'Given OP code: ' << std::dec << op_code << endl;
+            cout << "Given OP code: " << std::dec << op_code << endl;
             return -1;
             break;
     }
 }
 
-bool open_functional_unit(int functional_unit_id)
+bool Scoreboard::open_functional_unit(int functional_unit_id)
 {
     //Functional units memory
     int i = 0;
@@ -271,7 +271,7 @@ bool open_functional_unit(int functional_unit_id)
     return false;
 }
 
-bool write_buffer_open(mem_addr op_code, mem_addr dest)
+bool Scoreboard::write_buffer_open(mem_addr op_code, mem_addr dest)
 {
     //selects the correct buffer,
     //looks for an empty buffer in the dest place, if any, return false
@@ -317,23 +317,23 @@ bool Scoreboard::all_instructions_complete()
         }
         i++;
     }
-
+    return true;
 }
 
 bool Scoreboard::issue_instruction(int clock_time, struct instruction_struct new_instruction)
 {
     // Update Instruction Status
-    struct instruction_status_line this_instruction = {new_instruction.pc,clock_time,0,0,0}
+    struct instruction_status_line this_instruction = {new_instruction.pc,clock_time,0,0,0};
     instruction_status.push_back(this_instruction);
 
     // Update Functional Unit Satus
-    i = 0;
+    int i = 0;
     while (i < fu_status.size())
     {
         //corrent functional unit, not busy
-        if(fu_status[i].unit_id == functional_unit_id(new_instruciton.op) && fu_status[i].busy == false)
+        if(fu_status[i].unit_id == functional_unit_id(new_instruction.op) && fu_status[i].busy == false)
         {
-            swtich(new_instruciton.op)
+            switch(new_instruction.op)
             {
                 //all three registers
                 case 16:
@@ -346,8 +346,8 @@ bool Scoreboard::issue_instruction(int clock_time, struct instruction_struct new
                     fu_status[i].fi = new_instruction.first_reg_name;
                     fu_status[i].fj = new_instruction.second_reg_name;
                     fu_status[i].fk = new_instruction.third_reg_name;
-                    fu_status[i].qj = get_read_buffer_value(new_instruction.second_reg_name);
-                    fu_status[i].qk = get_read_buffer_value(new_instruction.third_reg_name);
+                    fu_status[i].qj = get_read_buffer_value(new_instruction.op, new_instruction.second_reg_name);
+                    fu_status[i].qk = get_read_buffer_value(new_instruction.op, new_instruction.third_reg_name);
                     fu_status[i].rj = (fu_status[i].qj == 0) ? true : false;
                     fu_status[i].rk = (fu_status[i].qk == 0) ? true : false;
                     fu_status[i].pc = new_instruction.pc;
@@ -365,7 +365,7 @@ bool Scoreboard::issue_instruction(int clock_time, struct instruction_struct new
                     fu_status[i].fi = new_instruction.first_reg_name;
                     fu_status[i].fj = new_instruction.second_reg_name;
                     fu_status[i].fk = 0;
-                    fu_status[i].qj = get_read_buffer_value(new_instruction.second_reg_name);
+                    fu_status[i].qj = get_read_buffer_value(new_instruction.op, new_instruction.second_reg_name);
                     fu_status[i].qk = 0;
                     fu_status[i].rj = (fu_status[i].qj == 0) ? true : false;
                     fu_status[i].rk = true;
@@ -410,7 +410,7 @@ bool Scoreboard::issue_instruction(int clock_time, struct instruction_struct new
                     fu_status[i].fi = 0;
                     fu_status[i].fj = new_instruction.first_reg_name;
                     fu_status[i].fk = 0;
-                    fu_status[i].qj = get_read_buffer_value(new_instruction.first_reg_name);
+                    fu_status[i].qj = get_read_buffer_value(new_instruction.op, new_instruction.first_reg_name);
                     fu_status[i].qk = 0;
                     fu_status[i].rj = (fu_status[i].qj == 0) ? false : true;
                     fu_status[i].rk = true;
@@ -425,8 +425,8 @@ bool Scoreboard::issue_instruction(int clock_time, struct instruction_struct new
                     fu_status[i].fi = 0;
                     fu_status[i].fj = new_instruction.first_reg_name;
                     fu_status[i].fk = new_instruction.second_reg_name;
-                    fu_status[i].qj = get_read_buffer_value(new_instruction.first_reg_name);
-                    fu_status[i].qk = get_read_buffer_value(new_instruction.second_reg_name);
+                    fu_status[i].qj = get_read_buffer_value(new_instruction.op, new_instruction.first_reg_name);
+                    fu_status[i].qk = get_read_buffer_value(new_instruction.op, new_instruction.second_reg_name);
                     fu_status[i].rj = (fu_status[i].qj == 0) ? true : false;
                     fu_status[i].rk = (fu_status[i].qk == 0) ? true : false;
                     fu_status[i].pc = new_instruction.pc;
@@ -440,8 +440,8 @@ bool Scoreboard::issue_instruction(int clock_time, struct instruction_struct new
                     fu_status[i].fi = 0;
                     fu_status[i].fj = new_instruction.first_reg_name;
                     fu_status[i].fk = new_instruction.second_reg_name;
-                    fu_status[i].qj = get_read_buffer_value(new_instruction.first_reg_name);
-                    fu_status[i].qk = get_read_buffer_value(new_instruction.second_reg_name);
+                    fu_status[i].qj = get_read_buffer_value(new_instruction.op, new_instruction.first_reg_name);
+                    fu_status[i].qk = get_read_buffer_value(new_instruction.op, new_instruction.second_reg_name);
                     fu_status[i].rj = (fu_status[i].qj == 0) ? true : false;
                     fu_status[i].rk = (fu_status[i].qk == 0) ? true : false;
                     fu_status[i].pc = new_instruction.pc;
@@ -461,7 +461,7 @@ bool Scoreboard::issue_instruction(int clock_time, struct instruction_struct new
     }
 
     // Update Result Status
-    swtich(new_instruciton.op)
+    switch(new_instruction.op)
     {
         //Have destinations
         case 1:
@@ -477,18 +477,18 @@ bool Scoreboard::issue_instruction(int clock_time, struct instruction_struct new
         case 16:
         {
             //NOPs
-            if (functional_unit_id(new_instruciton.op) == 0)
+            if (functional_unit_id(new_instruction.op) == 0)
             {
                 cout << "Error: Tried to get value for a NOP in the read buffer. [1]" << endl;
                 return false;
             }
-            if(is_int_register_bank(new_instruciton.op))
+            if(is_int_register_bank(new_instruction.op))
             {
-                integer_register_result_status[new_instruction.first_reg_name] = functional_unit_id(new_instruciton.op);
+                integer_register_result_status[new_instruction.first_reg_name] = functional_unit_id(new_instruction.op);
             }
             else
             {
-                floating_register_result_status[new_instruction.first_reg_name] = functional_unit_id(new_instruciton.op);
+                floating_register_result_status[new_instruction.first_reg_name] = functional_unit_id(new_instruction.op);
             }
             break;
         }
@@ -545,7 +545,7 @@ bool Scoreboard::can_write_out(struct instruction_struct write_out_instruction)
     int j = 0;
     while(j < fu_status.size())
     {
-        if(fu_status[j].fj == write_out_instruction.fi || fu_status[j].fk == write_out_instruction.fi)
+        if(fu_status[j].fj == write_out_instruction.first_reg_name || fu_status[j].fk == write_out_instruction.first_reg_name)
         {
             //check to make sure they have read their operands (instruciton status .read)
             int i = 0;
@@ -567,7 +567,7 @@ bool Scoreboard::can_write_out(struct instruction_struct write_out_instruction)
     return true;
 }
 
-void instruction_writen(int total_cycles_spent, struct instruction_struct complete_instruction)
+void Scoreboard::instruction_writen(int total_cycles_spent, struct instruction_struct complete_instruction)
 {
     //update instruction status
     int i = 0;
@@ -583,12 +583,12 @@ void instruction_writen(int total_cycles_spent, struct instruction_struct comple
     int j = 0;
     while(j < fu_status.size())
     {
-        if(fu_status[j].fj == complete_instruction.fi)
+        if(fu_status[j].fj == complete_instruction.first_reg_name)
         {
             fu_status[j].qj = 0;
             fu_status[j].rj = true;
         }
-        if(fu_status[j].fk == complete_instruction.fi)
+        if(fu_status[j].fk == complete_instruction.first_reg_name)
         {
             fu_status[j].qk = 0;
             fu_status[j].rk = true;
@@ -602,15 +602,14 @@ void instruction_writen(int total_cycles_spent, struct instruction_struct comple
     if (functional_unit_id(complete_instruction.op) == 0)
     {
         cout << "Error: Tried to get value for a NOP in the read buffer.[3]" << endl;
-        return 0;
     }
     if(is_int_register_bank(complete_instruction.op))
     {
-        integer_register_result_status[dest] = 0;
+        integer_register_result_status[complete_instruction.first_reg_name] = 0;
     }
     else
     {
-        floating_register_result_status[dest] = 0;
+        floating_register_result_status[complete_instruction.first_reg_name] = 0;
     }
 }
 
@@ -653,7 +652,7 @@ bool Scoreboard::is_int_register_bank(mem_addr op_code)
         default:
         {
             cout << "Error: There was an error when deciding which write buffer to pick in scoreboard" << endl;
-            cout << 'Given OP code: ' << std::dec << op_code << endl;
+            cout << "Given OP code: " << std::dec << op_code << endl;
             return false;
             break;
         }

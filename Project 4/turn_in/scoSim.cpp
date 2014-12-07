@@ -25,7 +25,7 @@ struct fetch_buffer
 	bool used;
 	mem_addr pc;
 	bool ready;
-}
+};
 
 class Sim
 {
@@ -39,6 +39,7 @@ private:
 	mem_addr second_register();					//Returns bits 16-8
 	mem_addr third_register();					//Returns bits 8-0
 	mem_addr immediate_value();					//Returns bits 16-0
+	mem_addr instruction_op_mem();
 	struct instruction_struct populate_new_instruction();
 	instruction *current_instruction;			//Pointer to the current instruction
 	void load_next_instruction();				//Takes all the steps to load next instruction
@@ -94,26 +95,28 @@ Sim::Sim()
 	total_instructions_executed = 0;
 	total_cycles_spent = 0;
 	total_nops = 0;
-	new_If_Id.instruction_ =0;
-	old_If_Id.instruction_ =0;
 }
 
 void Sim::run()
 {
 	while(more_instructions)
 	{
-		//PressAnyKey();
+		PressAnyKey();
 		//mem->print_memory();
-		//print_buffers();
-		//scoreboard_current->print();
+		print_buffers();
+		scoreboard_current->print();
 
 		fetch_and_issue_instruction();
+		scoreboard_next->print();
 		read_instruction();
+		scoreboard_next->print();
 		run_functional_units();
+		scoreboard_next->print();
 		write_out();
 
 		total_cycles_spent++;
 		scoreboard_current->deep_copy(scoreboard_next);
+
 		if(scoreboard_next->all_instructions_complete() && mem->read(pc) == 0 ) //All instructions complete and current instruciton is nop
 		{
 			more_instructions = false;
@@ -155,9 +158,9 @@ void Sim::fetch_and_issue_instruction()
 	if(issue_instruction)
 	{
 		//Issue instruciton
-		if (next_instruction == 0)
+		if (current_instruction == 0)
 		{
-			issue_instruciton = false;
+			issue_instruction = false;
 			pc++;
 			total_instructions_executed++;
 			total_nops++;
@@ -170,7 +173,7 @@ void Sim::fetch_and_issue_instruction()
 			instruction_struct new_instruction = populate_new_instruction();
 			read_operands_buffer.push_back(new_instruction);
 			//Update scoreboard
-			scoreboard_current->issue_instruction(total_cycles_spent,new_instruction);
+			scoreboard_next->issue_instruction(total_cycles_spent,new_instruction);
 		}
 	}
 	else
@@ -194,11 +197,11 @@ void Sim::read_instruction()
 	while (k < read_operands_buffer.size())
 	{
 		i = 0;
-		while (i < scoreboard_current.fu_status.size())
+		while (i < scoreboard_current->fu_status.size())
 		{
-			if (fu_status[i].pc == read_operands_buffer[k].pc && read_operands_buffer[k].used == false && read_operands_buffer[k].ready = false)
+			if (scoreboard_current->fu_status[i].pc == read_operands_buffer[k].pc && read_operands_buffer[k].used == false && read_operands_buffer[k].ready == false)
 			{
-				if(fu_status[i].rj == true && fu_status[i].rk == true);
+				if(scoreboard_current->fu_status[i].rj == true && scoreboard_current->fu_status[i].rk == true)
 				{
 					read_operands_buffer[k].ready = true;
 				}
@@ -212,7 +215,7 @@ void Sim::read_instruction()
 	{
 		if (read_operands_buffer[k].ready == true)
 		{
-			read_operands_buffer[k].used == true;
+			read_operands_buffer[k].used = true;
 			switch(read_operands_buffer[k].op)
 			{
 				case 0:
@@ -220,7 +223,7 @@ void Sim::read_instruction()
 					//Nop
 					cout << "Error: There should not be a NOP in the read operands stage. Make it stop!" << endl;
 					cout << "PC: " << std::hex << read_operands_buffer[k].pc << endl;
-					cout << "Current Istruction: " <<std::hex << read_operands_buffer[k].instruction << endl;
+					cout << "Current Istruction: " <<std::hex << read_operands_buffer[k].instruct << endl;
 					//more_instructions = false;
 					break;
 					break;
@@ -341,16 +344,16 @@ void Sim::read_instruction()
 				default:
 					cout << "Error: There was an error with reading operands" << endl;
 					cout << "PC: " << std::hex << read_operands_buffer[k].pc << endl;
-					cout << "Current Istruction: " << std::hex << read_operands_buffer[k].instruction << endl;
+					cout << "Current Istruction: " << std::hex << read_operands_buffer[k].instruct << endl;
 					//more_instructions = false;
 					break;
 			}
 			struct instruction_struct updated_instruction = read_operands_buffer[k];
-			read_operands_buffer.erase(k);
+			read_operands_buffer.erase(read_operands_buffer.begin()+k);
 			k--;
 
 			//put instruction into functional units buffer, with clocks left
-			switch(scoreboard_current->functional_unit_id(updated_instruction.op))
+			switch(scoreboard_next->functional_unit_id(updated_instruction.op))
 			{
 				case 1:
 				{
@@ -376,7 +379,7 @@ void Sim::read_instruction()
 				{
 					cout << "Error: There was an error putting an instruciton into the functional unit buffer" << endl;
 					cout << "PC: " << std::hex << updated_instruction.pc << endl;
-					cout << "Current Istruction: " << std::hex << updated_instruction.instruction << endl;
+					cout << "Current Istruction: " << std::hex << updated_instruction.instruct << endl;
 					//more_instructions = false;
 					break;
 				}
@@ -385,11 +388,11 @@ void Sim::read_instruction()
 
 			//update scoreboard
 			int j = 0;
-			while (j < scoreboard_current.instruction_status.size())
+			while (j < scoreboard_current->instruction_status.size())
 			{
-				if(scoreboard_current.instruction_status[j].pc == updated_instruction.pc)
+				if(scoreboard_current->instruction_status[j].pc == updated_instruction.pc)
 				{
-					scoreboard_current.instruction_status[j].read = total_cycles_spent;
+					scoreboard_next->instruction_status[j].read = total_cycles_spent;
 				}
 				j++;
 			}
@@ -435,14 +438,14 @@ void Sim::write_out()
 					//Nop
 					cout << "Error: There should not be a NOP in the write out stage. Make it stop!" << endl;
 					cout << "PC: " << std::hex << write_out_buffer[i].pc << endl;
-					cout << "Current Istruction: " <<std::hex << write_out_buffer[i].instruction << endl;
+					cout << "Current Istruction: " <<std::hex << write_out_buffer[i].instruct << endl;
 					//more_instructions = false;
 					break;
 					break;
 				}
 				case 1: //ADDI ADD IMMEDIATE
 				{
-					registers->write(write_out_buffer[k].first_reg_name, write_out_buffer[i].alu_resutls);
+					registers->write(write_out_buffer[i].first_reg_name, write_out_buffer[i].alu_results);
 					break;
 				}
 				case 2: //B BRANCH
@@ -467,7 +470,7 @@ void Sim::write_out()
 				}
 				case 6: //LA LOAD ADDRESS
 				{
-					registers->write(write_out_buffer[ii.first_reg_name, write_out_buffer[i].mem_read_results);
+					registers->write(write_out_buffer[i].first_reg_name, write_out_buffer[i].mem_read_results);
 					break;
 				}
 				case 7: //LB LOAD BYTE
@@ -535,7 +538,7 @@ void Sim::write_out()
 						{
 							cout << "Error: There was an error with the Write Buffer of SYSCALL." << endl;
 							cout << "PC: " << std::hex << write_out_buffer[i].pc << endl;
-							cout << "Current Istruction: " <<std::hex << write_out_buffer[i].instruction << endl;
+							cout << "Current Istruction: " <<std::hex << write_out_buffer[i].instruct << endl;
 							more_instructions = false;
 							break;
 						}
@@ -575,14 +578,14 @@ void Sim::write_out()
 				default:
 					cout << "Error: There was an error with reading operands" << endl;
 					cout << "PC: " << std::hex << write_out_buffer[i].pc << endl;
-					cout << "Current Istruction: " << std::hex << write_out_buffer[i].instruction << endl;
+					cout << "Current Istruction: " << std::hex << write_out_buffer[i].instruct << endl;
 					//more_instructions = false;
 					break;
 			}
 			//update scoreboard
-			scoreboard_current->instruction_writen(total_cycles_spent, write_out_buffer[i]);
+			scoreboard_next->instruction_writen(total_cycles_spent, write_out_buffer[i]);
 			//remove it
-			write_out_buffer.erase(i);
+			write_out_buffer.erase(write_out_buffer.begin()+i);
 		}
 		else
 		{
@@ -601,7 +604,7 @@ void Sim::floating_multiply()
 	int i = 0;
 	while(i < instructions_in_functional_units.size())
 	{
-		if(3 == scoreboard_current->fuctional_units_id(instructions_in_functional_units[i].op))
+		if(3 == scoreboard_current->functional_unit_id(instructions_in_functional_units[i].op))
 		{
 			if(instructions_in_functional_units[i].clocks_left == 0)
 			{
@@ -610,14 +613,14 @@ void Sim::floating_multiply()
 				{
 					case 12: //FMUL
 					{
-						instructions_in_functional_units[i].floating_alu_results = instructions_in_functional_units[i].float_op_A * instructions_in_functional_units[i].float_op_B;
+						instructions_in_functional_units[i].float_alu_results = instructions_in_functional_units[i].float_op_A * instructions_in_functional_units[i].float_op_B;
 						break;
 					}
 					default:
 					{
 						cout << "Error: There was an error with the floating multiply functional unit." << endl;
 						cout << "PC: " << std::hex << instructions_in_functional_units[i].pc << endl;
-						cout << "Current Istruction: " <<std::hex << instructions_in_functional_units[i].instruction << endl;
+						cout << "Current Istruction: " <<std::hex << instructions_in_functional_units[i].instruct << endl;
 						more_instructions = false;
 						break;
 					}
@@ -627,9 +630,9 @@ void Sim::floating_multiply()
 				instructions_in_functional_units[i].ready = false;
 				write_out_buffer.push_back(instructions_in_functional_units[i]);
 				//update scoreboard
-				scoreboard_current->instruction_complete(total_cycles_spent, instructions_in_functional_units[i]);
+				scoreboard_next->instruction_complete(total_cycles_spent, instructions_in_functional_units[i]);
 				//erase it from the instructions_in_functional_units
-				instructions_in_functional_units.erase(i);
+				instructions_in_functional_units.erase(instructions_in_functional_units.begin()+i);
 				i--;
 			}
 			else
@@ -645,7 +648,7 @@ void Sim::floating_add()
 	int i = 0;
 	while(i < instructions_in_functional_units.size())
 	{
-		if(2 == scoreboard_current->fuctional_units_id(instructions_in_functional_units[i].op))
+		if(2 == scoreboard_current->functional_unit_id(instructions_in_functional_units[i].op))
 		{
 			if(instructions_in_functional_units[i].clocks_left == 0)
 			{
@@ -654,19 +657,19 @@ void Sim::floating_add()
 				{
 					case 11: //FADD
 					{
-						instructions_in_functional_units[i].floating_alu_results = instructions_in_functional_units[i].float_op_A + instructions_in_functional_units[i].float_op_B;
+						instructions_in_functional_units[i].float_alu_results = instructions_in_functional_units[i].float_op_A + instructions_in_functional_units[i].float_op_B;
 						break;
 					}
 					case 13: //FSUB
 					{
-						instructions_in_functional_units[i].floating_alu_results = instructions_in_functional_units[i].float_op_A - instructions_in_functional_units[i].float_op_B;
+						instructions_in_functional_units[i].float_alu_results = instructions_in_functional_units[i].float_op_A - instructions_in_functional_units[i].float_op_B;
 						break;
 					}
 					default:
 					{
 						cout << "Error: There was an error with the floating multiply functional unit." << endl;
 						cout << "PC: " << std::hex << instructions_in_functional_units[i].pc << endl;
-						cout << "Current Istruction: " <<std::hex << instructions_in_functional_units[i].instruction << endl;
+						cout << "Current Istruction: " <<std::hex << instructions_in_functional_units[i].instruct << endl;
 						more_instructions = false;
 						break;
 					}
@@ -676,9 +679,9 @@ void Sim::floating_add()
 				instructions_in_functional_units[i].ready = false;
 				write_out_buffer.push_back(instructions_in_functional_units[i]);
 				//update scoreboard
-				scoreboard_current->instruction_complete(total_cycles_spent, instructions_in_functional_units[i]);
+				scoreboard_next->instruction_complete(total_cycles_spent, instructions_in_functional_units[i]);
 				//erase it from the instructions_in_functional_units
-				instructions_in_functional_units.erase(i);
+				instructions_in_functional_units.erase(instructions_in_functional_units.begin()+i);
 				i--;
 			}
 			else
@@ -694,7 +697,7 @@ void Sim::integer_alu()
 	int i = 0;
 	while(i < instructions_in_functional_units.size())
 	{
-		if(1 == scoreboard_current->fuctional_units_id(instructions_in_functional_units[i].op))
+		if(1 == scoreboard_current->functional_unit_id(instructions_in_functional_units[i].op))
 		{
 			if(instructions_in_functional_units[i].clocks_left == 0)
 			{
@@ -749,23 +752,23 @@ void Sim::integer_alu()
 					{
 						cout << "Error: There was an error with the ALU functional unit." << endl;
 						cout << "PC: " << std::hex << instructions_in_functional_units[i].pc << endl;
-						cout << "Current Istruction: " <<std::hex << instructions_in_functional_units[i].instruction << endl;
+						cout << "Current Istruction: " <<std::hex << instructions_in_functional_units[i].instruct << endl;
 						more_instructions = false;
 						break;
 					}
 
 				}
 				//put it in write buffer, we do not add branches to write out
-				if ( 2 != instructions_in_functional_units[i].op && 3 != instructions_in_functional_units[i].op && 4 != instructions_in_functional_units[i].op && 5 != instructions_in_functional_units[i].op && )
+				if ( 2 != instructions_in_functional_units[i].op && 3 != instructions_in_functional_units[i].op && 4 != instructions_in_functional_units[i].op && 5 != instructions_in_functional_units[i].op  )
 				{
 					instructions_in_functional_units[i].used = false;
 					instructions_in_functional_units[i].ready = false;
 					write_out_buffer.push_back(instructions_in_functional_units[i]);
 				}
 				//update scoreboard
-				scoreboard_current->instruction_complete(total_cycles_spent, instructions_in_functional_units[i]);
+				scoreboard_next->instruction_complete(total_cycles_spent, instructions_in_functional_units[i]);
 				//erase it from the instructions_in_functional_units
-				instructions_in_functional_units.erase(i);
+				instructions_in_functional_units.erase(instructions_in_functional_units.begin()+i);
 				i--;
 			}
 			else
@@ -781,7 +784,7 @@ void Sim::memory_write()
 	int i = 0;
 	while(i < instructions_in_functional_units.size())
 	{
-		if(4 == scoreboard_current->fuctional_units_id(instructions_in_functional_units[i].op))
+		if(4 == scoreboard_current->functional_unit_id(instructions_in_functional_units[i].op))
 		{
 			if(instructions_in_functional_units[i].clocks_left == 0)
 			{
@@ -790,7 +793,7 @@ void Sim::memory_write()
 				{
 					case 6: // LA
 					{
-						instructions_in_functional_units[i].mem_read_results = mem->read(instructions_in_functional_units[i].immedtiate);
+						instructions_in_functional_units[i].mem_read_results = *mem->read(instructions_in_functional_units[i].immediate);
 						break;
 					}
 					case 7: // Load Byte
@@ -801,7 +804,7 @@ void Sim::memory_write()
 					}
 					case 8: //B LI
 					{
-						instructions_in_functional_units[i].mem_read_results = mem->read(instructions_in_functional_units[i].immedtiate);
+						instructions_in_functional_units[i].mem_read_results = *mem->read(instructions_in_functional_units[i].immediate);
 						break;
 					}
 					case 10: //SYSCall
@@ -812,7 +815,7 @@ void Sim::memory_write()
 					case 14: // L.D
 					{
 						instructions_in_functional_units[i].alu_results = instructions_in_functional_units[i].op_A + instructions_in_functional_units[i].immediate;
-						instructions_in_functional_units[i].float_mem_read_results = mem->read(instructions_in_functional_units[i].alu_results);
+						instructions_in_functional_units[i].float_mem_read_results = *mem->read(instructions_in_functional_units[i].alu_results);
 						break;
 					}
 					case 15: // S.D
@@ -825,7 +828,7 @@ void Sim::memory_write()
 					{
 						cout << "Error: There was an error with the ALU functional unit." << endl;
 						cout << "PC: " << std::hex << instructions_in_functional_units[i].pc << endl;
-						cout << "Current Istruction: " <<std::hex << instructions_in_functional_units[i].instruction << endl;
+						cout << "Current Istruction: " <<std::hex << instructions_in_functional_units[i].instruct << endl;
 						more_instructions = false;
 						break;
 					}
@@ -836,9 +839,9 @@ void Sim::memory_write()
 				instructions_in_functional_units[i].ready = false;
 				write_out_buffer.push_back(instructions_in_functional_units[i]);
 				//update scoreboard
-				scoreboard_current->instruction_complete(total_cycles_spent, instructions_in_functional_units[i]);
+				scoreboard_next->instruction_complete(total_cycles_spent, instructions_in_functional_units[i]);
 				//erase it from the instructions_in_functional_units
-				instructions_in_functional_units.erase(i);
+				instructions_in_functional_units.erase(instructions_in_functional_units.begin()+i);
 				i--;
 			}
 			else
@@ -851,6 +854,17 @@ void Sim::memory_write()
 }
 
 int Sim::instruction_op()
+{															//Removes the memory address from instruction, bits 32-24
+	instruction op_value;
+	op_value = *current_instruction;
+	if(op_value == 0 )
+		op_value = 0;
+	else
+		op_value = op_value >> 24;
+	return op_value;
+}
+
+mem_addr Sim::instruction_op_mem()
 {															//Removes the memory address from instruction, bits 32-24
 	instruction op_value;
 	op_value = *current_instruction;
@@ -925,10 +939,9 @@ int8_t Sim::signed_immediate(mem_addr m_addr)				//Helper method for handling im
 	return 0;
 }
 
-void Sim::populate_new_instruction()
+struct instruction_struct Sim::populate_new_instruction()
 {
-	instruction_struct new_instruction;
-	swtich(instruction_op())
+	switch(instruction_op())
 	{
 		//all three registers
 		case 16:
@@ -936,7 +949,8 @@ void Sim::populate_new_instruction()
 		case 12:
 		case 13:
 		{
-			new_instruction = {pc,instruction_op(),0,first_register(),second_register(), third_register(),0,0,0,0,0,0,0,0,0,0,0};
+			instruction_struct new_instruction = {pc,instruction_op_mem(),*current_instruction,0,first_register(),second_register(), third_register(),0,0,0,0,0,0,0,0,0,0};
+			return new_instruction;
 			break;
 		}
 		//two registers, one immediate
@@ -948,7 +962,8 @@ void Sim::populate_new_instruction()
 		case 14:
 		case 15:
 		{
-			new_instruction = {pc,instruction_op(),signed_immediate(third_register()),first_register(),second_register(),0,0,0,0,0,0,0,0,0,0,0,0};
+			instruction_struct new_instruction = {pc,instruction_op_mem(),*current_instruction,signed_immediate(third_register()),first_register(),second_register(),0,0,0,0,0,0,0,0,0,0,0};
+			return new_instruction;
 			break;
 		}
 		//one register, one immediate
@@ -956,19 +971,22 @@ void Sim::populate_new_instruction()
 		case 6:
 		case 8:
 		{
-			new_instruction = {pc,instruction_op(),immediate_value(),first_register(),0,0,0,0,0,0,0,0,0,0,0,0,0};
+			instruction_struct new_instruction = {pc,instruction_op_mem(),*current_instruction,signed_immediate(third_register()),first_register(),0,0,0,0,0,0,0,0,0,0,0,0};
+			return new_instruction;
 			break;
 		}
 		// just immediate
 		case 2:
 		{
-			new_instruction = {pc,instruction_op(),signed_immediate(third_register()),0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+			instruction_struct new_instruction = {pc,instruction_op_mem(),*current_instruction,signed_immediate(third_register()),0,0,0,0,0,0,0,0,0,0,0,0,0};
+			return new_instruction;
 			break;
 		}
 		// syscall
 		case 10:
 		{
-			new_instruction = {pc,instruction_op(),0,1,3,0,0,0,0,0,0,0,0,0,0,0,0};
+			instruction_struct new_instruction = {pc,instruction_op_mem(),*current_instruction,0,1,3,0,0,0,0,0,0,0,0,0,0,0};
+			return new_instruction;
 			break;
 		}
 		default:
@@ -980,6 +998,7 @@ void Sim::populate_new_instruction()
 			break;
 		}
 	}
+	instruction_struct new_instruction = {pc,instruction_op_mem(),*current_instruction,0,1,3,0,0,0,0,0,0,0,0,0,0,0};
 	return new_instruction;
 }
 
@@ -991,67 +1010,31 @@ void Sim::load_next_instruction()
 
 void Sim::print_buffers()
 {
-	cout << "NOW: " <<endl;
-	cout << "=========================================================================" << endl;
-	//cout << ""<< std::hex << *(old_If_Id.instruction_) << endl;
-	cout << "            op "<< std::hex << old_Id_Ex.instruct << endl;
-	cout << "            op "<< std::dec << old_Id_Ex.op << endl;
-	cout << "            im "<< std::dec << static_cast<int16_t>(old_Id_Ex.immediate) << endl;
-	cout << "            f "<< std::dec << old_Id_Ex.first_reg << endl;
-	cout << "            s "<< std::dec << old_Id_Ex.second_reg << endl;
-	cout << "            t "<< std::dec << old_Id_Ex.third_reg << endl;
-	cout << "            A "<< std::dec << old_Id_Ex.op_A << endl;
-	cout << "            B "<< std::dec << old_Id_Ex.op_B << endl;
-	cout << "                        op "<< std::hex << old_Ex_Mm.instruct << endl;
-	cout << "                        op "<< std::dec << old_Ex_Mm.op << endl;
-	cout << "                        im "<< std::dec << static_cast<int16_t>(old_Ex_Mm.immediate) << endl;
-	cout << "                         f "<< std::dec << old_Ex_Mm.first_reg << endl;
-	cout << "                         s "<< std::dec << old_Ex_Mm.second_reg << endl;
-	cout << "                         t "<< std::dec << old_Ex_Mm.third_reg << endl;
-	cout << "                         A "<< std::dec << old_Ex_Mm.op_A << endl;
-	cout << "                         B "<< std::dec << old_Ex_Mm.op_B << endl;
-	cout << "                       alu "<< std::dec << old_Ex_Mm.alu_results << endl;
-	cout << "                                            op "<< std::hex << old_Mm_Wb.instruct << endl;
-	cout << "                                            op "<< std::dec << old_Mm_Wb.op << endl;
-	cout << "                                            im "<< std::dec << static_cast<int16_t>(old_Mm_Wb.immediate) << endl;
-	cout << "                                             f "<< std::dec << old_Mm_Wb.first_reg << endl;
-	cout << "                                             s "<< std::dec << old_Mm_Wb.second_reg << endl;
-	cout << "                                             t "<< std::dec << old_Mm_Wb.third_reg << endl;
-	cout << "                                             A "<< std::dec << old_Mm_Wb.op_A << endl;
-	cout << "                                             B "<< std::dec << old_Mm_Wb.op_B << endl;
-	cout << "                                           alu "<< std::dec << old_Mm_Wb.alu_results << endl;
-	cout << "                                           mem "<< std::dec << old_Mm_Wb.mem_read_results << endl;
-	cout << "=========================================================================" << endl;
-	registers->print_memory();
-	// cout << "NEXT: " << endl;
-	// cout << "=========================================================================" << endl;
-	// //cout << ""<< std::hex << *(new_If_Id.instruction_) << endl;
-	// cout << "            op "<< std::hex << new_Id_Ex.instruct << endl;
-	// cout << "            op "<< std::dec << new_Id_Ex.op << endl;
-	// cout << "            im "<< std::dec << static_cast<int16_t>(new_Id_Ex.immediate) << endl;
-	// cout << "            f "<< std::dec << new_Id_Ex.first_reg << endl;
-	// cout << "            s "<< std::dec << new_Id_Ex.second_reg << endl;
-	// cout << "            t "<< std::dec << new_Id_Ex.third_reg << endl;
-	// cout << "            A "<< std::dec << new_Id_Ex.op_A << endl;
-	// cout << "            B "<< std::dec << new_Id_Ex.op_B << endl;
-	// cout << "                        op "<< std::hex << new_Ex_Mm.instruct << endl;
-	// cout << "                        op "<< std::dec << new_Ex_Mm.op << endl;
-	// cout << "                        im "<< std::dec << static_cast<int16_t>(new_Ex_Mm.immediate) << endl;
-	// cout << "                         f "<< std::dec << new_Ex_Mm.first_reg << endl;
-	// cout << "                         s "<< std::dec << new_Ex_Mm.second_reg << endl;
-	// cout << "                         t "<< std::dec << new_Ex_Mm.third_reg << endl;
-	// cout << "                         A "<< std::dec << new_Ex_Mm.op_A << endl;
-	// cout << "                         B "<< std::dec << new_Ex_Mm.op_B << endl;
-	// cout << "                       alu "<< std::dec << new_Ex_Mm.alu_results << endl;
-	// cout << "                                            op "<< std::hex << new_Mm_Wb.instruct << endl;
-	// cout << "                                            op "<< std::dec << new_Mm_Wb.op << endl;
-	// cout << "                                            im "<< std::dec << static_cast<int16_t>(new_Mm_Wb.immediate )<< endl;
-	// cout << "                                             f "<< std::dec << new_Mm_Wb.first_reg << endl;
-	// cout << "                                             s "<< std::dec << new_Mm_Wb.second_reg << endl;
-	// cout << "                                             t "<< std::dec << new_Mm_Wb.third_reg << endl;
-	// cout << "                                             A "<< std::dec << new_Mm_Wb.op_A << endl;
-	// cout << "                                             B "<< std::dec << new_Mm_Wb.op_B << endl;
-	// cout << "                                           alu "<< std::dec << new_Mm_Wb.alu_results << endl;
-	// cout << "                                           mem "<< std::dec << new_Mm_Wb.mem_read_results << endl;
-	// cout << "=========================================================================" << endl;
+	std::vector<instruction_struct> read_operands_buffer;
+	std::vector<instruction_struct> instructions_in_functional_units;
+	std::vector<instruction_struct> write_out_buffer;
+
+	cout << "+++++++++++++++++++++++++++++++++++++++++++++" << endl;
+	cout << "Ready to be read instructions " << endl;
+	int j = 0;
+	while(j < read_operands_buffer.size())
+	{
+		cout << std::hex << "  " << read_operands_buffer[j].instruct << endl;
+		j++;
+	}
+	cout << "Instructions in functional units" << endl;
+	j = 0;
+	while(j < instructions_in_functional_units.size())
+	{
+		cout << std::hex << "  " << instructions_in_functional_units[j].instruct << "  " << instructions_in_functional_units[j].clocks_left << endl;
+		j++;
+	}
+	cout << "Ready to be writen instructions " << endl;
+	j = 0;
+	while(j < write_out_buffer.size())
+	{
+		cout << std::hex << "  " << write_out_buffer[j].instruct << endl;
+		j++;
+	}
+	cout << "+++++++++++++++++++++++++++++++++++++++++++++" << endl;
 }
