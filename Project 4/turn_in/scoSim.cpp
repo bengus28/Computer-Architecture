@@ -219,8 +219,8 @@ void Sim::read_instruction()
 				{
 					//Nop
 					cout << "Error: There should not be a NOP in the read operands stage. Make it stop!" << endl;
-					cout << "PC: " << std::hex << pc << endl;
-					cout << "Current Istruction: " <<std::hex << *current_instruction << endl;
+					cout << "PC: " << std::hex << read_operands_buffer[k].pc << endl;
+					cout << "Current Istruction: " <<std::hex << read_operands_buffer[k].instruction << endl;
 					//more_instructions = false;
 					break;
 					break;
@@ -336,7 +336,6 @@ void Sim::read_instruction()
 				{
 					read_operands_buffer[k].op_A = registers->read(read_operands_buffer[k].second_reg_name);
 					read_operands_buffer[k].op_B = registers->read(read_operands_buffer[k].third_reg_name);
-					return INTEGER_ALU_ID;
 					break;
 				}
 				default:
@@ -392,8 +391,8 @@ void Sim::read_instruction()
 				{
 					scoreboard_current.instruction_status[j].read = total_cycles_spent;
 				}
+				j++;
 			}
-
 		}
 	k++;
 	}
@@ -408,225 +407,10 @@ Effected buffers:
 */
 void Sim::run_functional_units()
 {
-	//TODO:
-
 	floating_multiply();
 	floating_add();
 	integer_alu();
 	memory_write();
-
-
-
-
-
-	//run the instruciton
-	new_Ex_Mm.op = old_Id_Ex.op;
-	new_Ex_Mm.instruct = old_Id_Ex.instruct;
-	switch(old_Id_Ex.op)
-	{
-		case 0:
-		{
-			//Nop
-			new_Ex_Mm.immediate = 0 ;
-			new_Ex_Mm.first_reg = 0 ;
-			new_Ex_Mm.second_reg = 0 ;
-			new_Ex_Mm.third_reg = 0 ;
-			new_Ex_Mm.op_A = 0 ;
-			new_Ex_Mm.op_B = 0 ;
-			new_Ex_Mm.alu_results = 0;
-			break;
-		}
-		case 1: //ADDI ADD IMMEDIATE
-		{
-			new_Ex_Mm.immediate = old_Id_Ex.immediate;
-			new_Ex_Mm.second_reg = old_Id_Ex.second_reg;
-			new_Ex_Mm.first_reg = old_Id_Ex.first_reg;
-			new_Ex_Mm.op_A = old_Id_Ex.op_A;
-			if(old_Id_Ex.second_reg == old_Ex_Mm.first_reg)
-			{
-				old_Id_Ex.op_A = old_Ex_Mm.alu_results;
-			}
-			if(old_Id_Ex.second_reg == old_Mm_Wb.first_reg)
-			{
-				old_Id_Ex.op_A = old_Mm_Wb.alu_results;
-			}
-			new_Ex_Mm.alu_results = old_Id_Ex.immediate + old_Id_Ex.op_A;
-			break;
-		}
-		case 2: //B BRANCH
-		{
-			break;
-		}
-		case 3: //BEQZ BRACH IF EQUAL TO ZERO
-		{
-			break;
-		}
-		case 4: //BGE BRANCH IF GREATER OR EQUAL $t0,$t1,target,  $t0 >= $t1
-		{
-			break;
-		}
-		case 5: //BNE BRANCH IF NOT EQUAL  $t0,$t1,target, $t0 <> $t1
-		{
-			break;
-		}
-		case 6: //LA LOAD ADDRESS
-		{
-			new_Ex_Mm.first_reg = old_Id_Ex.first_reg;
-			new_Ex_Mm.op_A = old_Id_Ex.op_A;
-			if(old_Id_Ex.second_reg == old_Ex_Mm.first_reg)
-			{
-				old_Id_Ex.op_A = old_Ex_Mm.alu_results;
-			}
-			if(old_Id_Ex.second_reg == old_Mm_Wb.first_reg)
-			{
-				old_Id_Ex.op_A = old_Mm_Wb.alu_results;
-			}
-			new_Ex_Mm.alu_results = old_Id_Ex.op_A;
-			break;
-		}
-		case 7: //LB LOAD BYTE
-		{
-			new_Ex_Mm.first_reg = old_Id_Ex.first_reg;
-			new_Ex_Mm.second_reg = old_Id_Ex.second_reg;
-			new_Ex_Mm.immediate = old_Id_Ex.immediate;
-			new_Ex_Mm.op_A = old_Id_Ex.op_A;			//number of bytes
-			if(old_Id_Ex.second_reg == old_Ex_Mm.first_reg)
-			{
-				old_Id_Ex.op_A = old_Ex_Mm.alu_results;
-			}
-			if(old_Id_Ex.second_reg == old_Mm_Wb.first_reg)
-			{
-				old_Id_Ex.op_A = old_Mm_Wb.alu_results;
-			}
-			new_Ex_Mm.alu_results = old_Id_Ex.op_A + old_Id_Ex.immediate;
-			break;
-		}
-		case 8: //LI LOAD IMMEDIATE
-		{
-			new_Ex_Mm.first_reg = old_Id_Ex.first_reg;
-			new_Ex_Mm.second_reg = old_Id_Ex.second_reg;
-			new_Ex_Mm.op_A = old_Id_Ex.op_A;
-			if(old_Id_Ex.second_reg == old_Ex_Mm.first_reg)
-			{
-				old_Id_Ex.op_A = old_Ex_Mm.alu_results;
-			}
-			if(old_Id_Ex.second_reg == old_Mm_Wb.first_reg)
-			{
-				old_Id_Ex.op_A = old_Mm_Wb.alu_results;
-			}
-			new_Ex_Mm.alu_results = old_Id_Ex.op_A;
-			break;
-		}
-		case 9: //SUBI SUBTRACT IMMEDIATE
-		{
-			new_Ex_Mm.immediate = old_Id_Ex.immediate;
-			new_Ex_Mm.op_A = old_Id_Ex.op_A;
-			new_Ex_Mm.second_reg = old_Id_Ex.second_reg;
-			new_Ex_Mm.first_reg = old_Id_Ex.first_reg;
-			if(old_Id_Ex.second_reg == old_Ex_Mm.first_reg)
-			{
-				old_Id_Ex.op_A = old_Ex_Mm.alu_results;
-			}
-			if(old_Id_Ex.second_reg == old_Mm_Wb.first_reg)
-			{
-				old_Id_Ex.op_A = old_Mm_Wb.alu_results;
-			}
-			new_Ex_Mm.alu_results =  old_Id_Ex.op_A + (- old_Id_Ex.immediate);
-			break;
-		}
-		case 10: //SYSCALL
-		{
-			instruction regist_value = old_Id_Ex.op_B;
-			if(old_Id_Ex.second_reg == old_Ex_Mm.first_reg)
-			{
-				regist_value = old_Ex_Mm.alu_results;
-			}
-			if(old_Id_Ex.second_reg == old_Mm_Wb.first_reg)
-			{
-				regist_value = old_Mm_Wb.alu_results;
-			}
-			new_Ex_Mm.second_reg = old_Id_Ex.second_reg;
-			new_Ex_Mm.op_B = regist_value;
-			switch(regist_value)
-			{
-				case 1:
-				{
-					new_Ex_Mm.first_reg = old_Id_Ex.first_reg;
-					new_Ex_Mm.op_A = old_Id_Ex.op_A;
-					break;
-				}
-				case 4:	//Print String
-				{
-					old_Id_Ex.first_reg =1;
-					instruction regist_value = old_Id_Ex.op_A;
-					if(old_Id_Ex.first_reg == old_Ex_Mm.first_reg)
-					{
-						regist_value = old_Ex_Mm.alu_results;
-					}
-					if(old_Id_Ex.first_reg == old_Mm_Wb.first_reg)
-					{
-						regist_value = old_Mm_Wb.alu_results;
-					}
-					if(old_Id_Ex.first_reg == new_Mm_Wb.first_reg)
-					{
-						regist_value = new_Mm_Wb.alu_results;
-					}
-					new_Ex_Mm.first_reg = old_Id_Ex.first_reg;
-					new_Ex_Mm.op_A = regist_value;
-					break;
-				}
-				case 8:	//Read String In
-				{
-					old_Id_Ex.first_reg = 1;
-					instruction regist_value = old_Id_Ex.op_A;
-					if(old_Id_Ex.first_reg == old_Ex_Mm.first_reg)
-					{
-						regist_value = old_Ex_Mm.alu_results;
-					}
-					if(old_Id_Ex.first_reg == old_Mm_Wb.first_reg)
-					{
-						regist_value = old_Mm_Wb.alu_results;
-					}
-					if(old_Id_Ex.first_reg == new_Mm_Wb.first_reg)
-					{
-						regist_value = new_Mm_Wb.alu_results;
-					}
-					new_Ex_Mm.first_reg = old_Id_Ex.first_reg;
-					new_Ex_Mm.op_A = regist_value;
-					break;
-				}
-				case 10:// End Program
-				{
-					break;
-				}
-				default:
-				{
-					cout << "Error: There was an error with the Execute of SYSCALL." << endl;
-					cout << "PC: " << std::hex << pc << endl;
-					cout << "Current Istruction: " <<std::hex << *current_instruction << endl;
-					more_instructions = false;
-					break;
-				}
-			}
-			break;
-		}
-		case 11:	//LOAD
-		{
-			cout << "Error: LOAD Instruction not implemented." << endl;
-			break;
-		}
-		case 12:	//STORE
-		{
-			cout << "Error: STORE Instruction not implemented." << endl;
-			break;
-		}
-		default:
-			cout << "Error: There was an error with the Execute Stage." << endl;
-			cout << "PC: " << std::hex << pc << endl;
-			cout << "Current Istruction: " <<std::hex << *current_instruction << endl;
-			more_instructions = false;
-			break;
-	}
 }
 //=========================================================================================
 //----------------------------- Write Stage -----------------------------------------------
@@ -637,296 +421,175 @@ Effected registers:
 */
 void Sim::write_out()
 {
-	//store or load from Memory
-	new_Mm_Wb.op = old_Ex_Mm.op;
-	new_Mm_Wb.instruct = old_Ex_Mm.instruct;
-	switch(old_Ex_Mm.op)
+	int i = 0;
+	while(i < write_out_buffer.size())
 	{
-		case 0:
+		//Check if we can wirte it
+		if(scoreboard_current->can_write_out(write_out_buffer[i]))
 		{
-			//Nop
-			new_Mm_Wb.immediate = 0 ;
-			new_Mm_Wb.first_reg = 0 ;
-			new_Mm_Wb.second_reg = 0 ;
-			new_Mm_Wb.third_reg = 0 ;
-			new_Mm_Wb.op_A = 0 ;
-			new_Mm_Wb.op_B = 0 ;
-			new_Mm_Wb.alu_results = 0;
-			new_Mm_Wb.mem_read_results =0;
-			break;
-		}
-		case 1: //ADDI ADD IMMEDIATE
-		{
-			new_Mm_Wb.immediate = old_Ex_Mm.immediate;
-			new_Mm_Wb.second_reg = old_Ex_Mm.second_reg;
-			new_Mm_Wb.first_reg = old_Ex_Mm.first_reg;
-			new_Mm_Wb.op_A = old_Ex_Mm.op_A;
-			new_Mm_Wb.alu_results = old_Ex_Mm.alu_results;
-			break;
-		}
-		case 2: //B BRANCH
-		{
-			break;
-		}
-		case 3: //BEQZ BRACH IF EQUAL TO ZERO
-		{
-			break;
-		}
-		case 4: //BGE BRANCH IF GREATER OR EQUAL $t0,$t1,target,  $t0 >= $t1
-		{
-			break;
-		}
-		case 5: //BNE BRANCH IF NOT EQUAL  $t0,$t1,target, $t0 <> $t1
-		{
-			break;
-		}
-		case 6: //LA LOAD ADDRESS
-		{
-			new_Mm_Wb.first_reg = old_Ex_Mm.first_reg;
-			new_Mm_Wb.op_A = old_Ex_Mm.op_A;
-			new_Mm_Wb.alu_results = old_Ex_Mm.op_A;
-			break;
-		}
-		case 7: //LB LOAD BYTE
-		{
-			new_Mm_Wb.first_reg = old_Ex_Mm.first_reg;
-			new_Mm_Wb.second_reg = old_Ex_Mm.second_reg;
-			new_Mm_Wb.immediate = old_Ex_Mm.immediate;
-			new_Mm_Wb.op_A = old_Ex_Mm.op_A;//number of bytes
-			new_Mm_Wb.alu_results = old_Ex_Mm.alu_results;
-			new_Mm_Wb.mem_read_results = mem->read_byte(old_Ex_Mm.alu_results, old_Ex_Mm.alu_results%4);
-			break;
-		}
-		case 8: //LI LOAD IMMEDIATE
-		{
-			new_Mm_Wb.first_reg = old_Ex_Mm.first_reg;
-			new_Mm_Wb.second_reg = old_Ex_Mm.second_reg;
-			new_Mm_Wb.op_A = old_Ex_Mm.op_A;
-			new_Mm_Wb.alu_results = old_Ex_Mm.alu_results;
-			break;
-		}
-		case 9: //SUBI SUBTRACT IMMEDIATE
-		{
-			new_Mm_Wb.immediate = old_Ex_Mm.immediate;
-			new_Mm_Wb.op_A = old_Ex_Mm.op_A;
-			new_Mm_Wb.second_reg = old_Ex_Mm.second_reg;
-			new_Mm_Wb.first_reg = old_Ex_Mm.first_reg;
-			new_Mm_Wb.alu_results = old_Ex_Mm.alu_results;
-			break;
-		}
-		case 10: //SYSCALL
-		{
-			new_Mm_Wb.second_reg = old_Ex_Mm.second_reg;
-			new_Mm_Wb.op_B = old_Ex_Mm.op_B;
-			switch(old_Ex_Mm.op_B)
+			//write it
+			switch(write_out_buffer[i].op)
 			{
-				case 1:
+				case 0:
 				{
-					if(old_Ex_Mm.first_reg == 1)
+					//Nop
+					cout << "Error: There should not be a NOP in the write out stage. Make it stop!" << endl;
+					cout << "PC: " << std::hex << write_out_buffer[i].pc << endl;
+					cout << "Current Istruction: " <<std::hex << write_out_buffer[i].instruction << endl;
+					//more_instructions = false;
+					break;
+					break;
+				}
+				case 1: //ADDI ADD IMMEDIATE
+				{
+					registers->write(write_out_buffer[k].first_reg_name, write_out_buffer[i].alu_resutls);
+					break;
+				}
+				case 2: //B BRANCH
+				{
+					//Do nothing
+					break;
+				}
+				case 3: //BEQZ BRACH IF EQUAL TO ZERO
+				{
+					//Do nothing
+					break;
+				}
+				case 4: //BGE BRANCH IF GREATER OR EQUAL $t0,$t1,target,  $t0 >= $t1
+				{
+					//Do nothing
+					break;
+				}
+				case 5: //BNE BRANCH IF NOT EQUAL  $t0,$t1,target, $t0 <> $t1
+				{
+					//Do nothing
+					break;
+				}
+				case 6: //LA LOAD ADDRESS
+				{
+					registers->write(write_out_buffer[ii.first_reg_name, write_out_buffer[i].mem_read_results);
+					break;
+				}
+				case 7: //LB LOAD BYTE
+				{
+					registers->write(write_out_buffer[i].first_reg_name, write_out_buffer[i].mem_read_results);
+					break;
+				}
+				case 8: //LI LOAD IMMEDIATE
+				{
+					registers->write(write_out_buffer[i].first_reg_name, write_out_buffer[i].mem_read_results);
+					break;
+				}
+				case 9: //SUBI SUBTRACT IMMEDIATE
+				{
+					registers->write(write_out_buffer[i].first_reg_name, write_out_buffer[i].alu_results);
+					break;
+				}
+				case 10: //SYSCALL
+				{
+					switch(write_out_buffer[i].op_B)
+					{
+						case 1:
 						{
-							cout << "Printed Integer: 1001" << endl;
+							if(write_out_buffer[i].first_reg_name == 1)
+							{
+								cout << "Printed Integer: 1001" << endl;
+							}
+							break;
 						}
-					break;
-				}
-				case 4:	//Print String
-				{
-					new_Mm_Wb.first_reg = old_Ex_Mm.first_reg;
-					new_Mm_Wb.op_A = old_Ex_Mm.op_A;
-					cout << mem->read_string(old_Ex_Mm.op_A) << endl;
-					break;
-				}
-				case 8:	//Read String In
-				{
-					new_Mm_Wb.first_reg = old_Ex_Mm.first_reg;
-					new_Mm_Wb.op_A = old_Ex_Mm.op_A;
+						case 4:	//Print String
+						{
+							cout << mem->read_string(write_out_buffer[i].op_A) << endl;
+							break;
+						}
+						case 8:	//Read String In
+						{
+							char palin[1024];
+							string incoming_palin;
 
-					char palin[1024];
-					string incoming_palin;
-
-					int length=1024;
-				    for (int i=0;i<1024;i++)		// clear mem
-				    {
-				            palin[i]=0;
-				    }
-					cout << "Please enter a word: ";
-					getline(cin, incoming_palin);
-					incoming_palin.copy(palin,1024,0);
-					int len=strlen(palin);
-					palin[len] = '\0';
-					//cin >> *palin >> "\0";
-					mem->load_string(old_Ex_Mm.op_A,palin);
+							int length=1024;
+							for (int j=0;j<1024;j++)		// clear mem
+							{
+									palin[j]=0;
+							}
+							cout << "Please enter a word: ";
+							getline(cin, incoming_palin);
+							incoming_palin.copy(palin,1024,0);
+							int len=strlen(palin);
+							palin[len] = '\0';
+							//cin >> *palin >> "\0";
+							mem->load_string(write_out_buffer[i].op_A,palin);
+							break;
+						}
+						case 10:// End Program
+						{
+							cout << endl;
+							cout << "Number of Instructions Executed (IC): " << std::dec<< total_instructions_executed << endl;
+							cout << "Number of Cycles Spent in Execution (C): " <<std::dec<<  total_cycles_spent << endl;
+							cout << "Number of NOPs: " << std::dec << total_nops << endl;
+							cout << "Goodbye." << endl;
+							more_instructions = false;
+							break;
+						}
+						default:
+						{
+							cout << "Error: There was an error with the Write Buffer of SYSCALL." << endl;
+							cout << "PC: " << std::hex << write_out_buffer[i].pc << endl;
+							cout << "Current Istruction: " <<std::hex << write_out_buffer[i].instruction << endl;
+							more_instructions = false;
+							break;
+						}
+					}
 					break;
 				}
-				case 10:// End Program
+				case 11:	//FADD - add two floats
 				{
+					floating_registers->write(write_out_buffer[i].first_reg_name, write_out_buffer[i].float_alu_results);
+					break;
+				}
+				case 12:	//FMUL - multiply two floats
+				{
+					floating_registers->write(write_out_buffer[i].first_reg_name, write_out_buffer[i].float_alu_results);
+					break;
+				}
+				case 13:  //FSUB
+				{
+					floating_registers->write(write_out_buffer[i].first_reg_name, write_out_buffer[i].float_alu_results);
+					break;
+				}
+				case 14: // L.D load
+				{
+					floating_registers->write(write_out_buffer[i].first_reg_name, write_out_buffer[i].float_mem_read_results);
+					break;
+				}
+				case 15: // S.D -- store
+				{
+					//do Nothing
+					break;
+				}
+				case 16: // add
+				{
+					registers->write(write_out_buffer[i].first_reg_name, write_out_buffer[i].alu_results);
 					break;
 				}
 				default:
-				{
-					cout << "Error: There was an error with the Memory of SYSCALL." << endl;
-					cout << "PC: " << std::hex << pc << endl;
-					cout << "Current Istruction: " <<std::hex << *current_instruction << endl;
-					more_instructions = false;
+					cout << "Error: There was an error with reading operands" << endl;
+					cout << "PC: " << std::hex << write_out_buffer[i].pc << endl;
+					cout << "Current Istruction: " << std::hex << write_out_buffer[i].instruction << endl;
+					//more_instructions = false;
 					break;
-				}
 			}
-			break;
+			//update scoreboard
+			scoreboard_current->instruction_writen(total_cycles_spent, write_out_buffer[i]);
+			//remove it
+			write_out_buffer.erase(i);
 		}
-		case 11:	//LOAD
+		else
 		{
-			cout << "Error: LOAD Instruction not implemented." << endl;
-			break;
+			//stall
+			//do nothing
 		}
-		case 12:	//STORE
-		{
-			cout << "Error: STORE Instruction not implemented." << endl;
-			break;
-		}
-		default:
-			cout << "Error: There was an error with the Memory Stage." << endl;
-			cout << "PC: " << std::hex << pc << endl;
-			cout << "Current Istruction: " <<std::hex << *current_instruction << endl;
-			more_instructions = false;
-			break;
-	}
-
-	//store in registers
-	switch(old_Mm_Wb.op)
-	{
-		case 0:
-		{
-			total_nops++;
-			//Nop
-			break;
-		}
-		case 1: //ADDI ADD IMMEDIATE
-		{
-			bool success = registers->write(old_Mm_Wb.first_reg, old_Mm_Wb.alu_results);
-			if (false == success)
-			{
-				cout << "Error: Adding value (1) to register: "<< std::dec << old_Mm_Wb.first_reg << endl;
-			}
-
-			total_instructions_executed++;
-			break;
-		}
-		case 2: //B BRANCH
-		{
-			total_instructions_executed++;
-			break;
-		}
-		case 3: //BEQZ BRACH IF EQUAL TO ZERO
-		{
-			total_instructions_executed++;
-			break;
-		}
-		case 4: //BGE BRANCH IF GREATER OR EQUAL $t0,$t1,target,  $t0 >= $t1
-		{
-			total_instructions_executed++;
-			break;
-		}
-		case 5: //BNE BRANCH IF NOT EQUAL  $t0,$t1,target, $t0 <> $t1
-		{
-			total_instructions_executed++;
-			break;
-		}
-		case 6: //LA LOAD ADDRESS
-		{
-			bool success = registers->write(old_Mm_Wb.first_reg,old_Mm_Wb.op_A);
-			if (false == success)
-			{
-				cout << "Error: Loading Address (6) to register: "<< std::dec << old_Mm_Wb.first_reg << endl;
-			}
-			total_instructions_executed++;
-			break;
-		}
-		case 7: //LB LOAD BYTE
-		{
-			bool success = registers->write(old_Mm_Wb.first_reg, old_Mm_Wb.mem_read_results );
-			if (false == success)
-			{
-				cout << "Error: Loading Byte (7) into register: "<< std::dec << old_Mm_Wb.first_reg << endl;
-			}
-			total_instructions_executed++;
-			break;
-		}
-		case 8: //LI LOAD IMMEDIATE
-		{
-			bool success = registers->write(old_Mm_Wb.first_reg, old_Mm_Wb.second_reg);
-			if (false == success)
-			{
-				cout << "Error: Loading Immediate value (8) to register: "<< std::dec << old_Mm_Wb.first_reg << endl;
-			}
-			total_instructions_executed++;
-			break;
-		}
-		case 9: //SUBI SUBTRACT IMMEDIATE
-		{
-			bool success = registers->write(old_Mm_Wb.first_reg, old_Mm_Wb.alu_results);
-			if (false == success)
-			{
-				cout << "Error: Adding value (9) to register: "<< std::dec << old_Mm_Wb.first_reg << endl;
-			}
-			total_instructions_executed++;
-			break;
-		}
-		case 10: //SYSCALL
-		{
-			switch(old_Mm_Wb.op_B)
-			{
-				case 1:
-				{
-					total_instructions_executed++;
-					break;
-				}
-				case 4:	//Print String
-				{
-					total_instructions_executed++;
-					break;
-				}
-				case 8:	//Read String In
-				{
-					total_instructions_executed++;
-					break;
-				}
-				case 10:// End Program
-				{
-					total_instructions_executed++;
-					cout << endl;
-					cout << "Number of Instructions Executed (IC): " << std::dec<< total_instructions_executed << endl;
-					cout << "Number of Cycles Spent in Execution (C): " <<std::dec<<  total_cycles_spent << endl;
-					cout << "Number of NOPs: " << std::dec << total_nops << endl;
-					cout << "Goodbye." << endl;
-					more_instructions = false;
-					break;
-				}
-				default:
-				{
-					cout << "Error: There was an error with the Write Buffer of SYSCALL." << endl;
-					cout << "PC: " << std::hex << pc << endl;
-					cout << "Current Istruction: " <<std::hex << current_instruction << endl;
-					more_instructions = false;
-					break;
-				}
-			}
-			break;
-		}
-		case 11:	//LOAD
-		{
-			cout << "Error: LOAD Instruction not implemented." << endl;
-			break;
-		}
-		case 12:	//STORE
-		{
-			cout << "Error: STORE Instruction not implemented." << endl;
-			break;
-		}
-		default:
-			cout << "Error: There was an error with the Write Buffer Stage." << endl;
-			cout << "PC: " << std::hex << pc << endl;
-			cout << "Current Istruction: " <<std::hex << current_instruction << endl;
-			more_instructions = false;
-			break;
+		i++;
 	}
 }
 
@@ -963,6 +626,8 @@ void Sim::floating_multiply()
 				instructions_in_functional_units[i].used = false;
 				instructions_in_functional_units[i].ready = false;
 				write_out_buffer.push_back(instructions_in_functional_units[i]);
+				//update scoreboard
+				scoreboard_current->instruction_complete(total_cycles_spent, instructions_in_functional_units[i]);
 				//erase it from the instructions_in_functional_units
 				instructions_in_functional_units.erase(i);
 				i--;
@@ -1010,6 +675,8 @@ void Sim::floating_add()
 				instructions_in_functional_units[i].used = false;
 				instructions_in_functional_units[i].ready = false;
 				write_out_buffer.push_back(instructions_in_functional_units[i]);
+				//update scoreboard
+				scoreboard_current->instruction_complete(total_cycles_spent, instructions_in_functional_units[i]);
 				//erase it from the instructions_in_functional_units
 				instructions_in_functional_units.erase(i);
 				i--;
@@ -1095,6 +762,8 @@ void Sim::integer_alu()
 					instructions_in_functional_units[i].ready = false;
 					write_out_buffer.push_back(instructions_in_functional_units[i]);
 				}
+				//update scoreboard
+				scoreboard_current->instruction_complete(total_cycles_spent, instructions_in_functional_units[i]);
 				//erase it from the instructions_in_functional_units
 				instructions_in_functional_units.erase(i);
 				i--;
@@ -1166,6 +835,8 @@ void Sim::memory_write()
 				instructions_in_functional_units[i].used = false;
 				instructions_in_functional_units[i].ready = false;
 				write_out_buffer.push_back(instructions_in_functional_units[i]);
+				//update scoreboard
+				scoreboard_current->instruction_complete(total_cycles_spent, instructions_in_functional_units[i]);
 				//erase it from the instructions_in_functional_units
 				instructions_in_functional_units.erase(i);
 				i--;

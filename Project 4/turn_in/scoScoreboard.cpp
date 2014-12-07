@@ -93,7 +93,10 @@ public:
     bool write_buffer_open(mem_addr op_code,mem_addr dest);
     bool all_instructions_complete();
     bool issue_instruction(int clock_time, struct instruction_struct new_instruction);
-
+    void instruction_complete(int total_cycles_spent, struct instruction_struct complete_instruction);
+    void instruction_writen(int total_cycles_spent, struct instruction_struct complete_instruction);
+    bool can_write_out(struct instruction_struct write_out_instruction);
+    mem_addr get_read_buffer_value(mem_addr op_code, mem_addr dest);
     bool is_int_register_bank(mem_addr op_code);
     void print();       //Prints out current score board state
     std::vector<instruction_status_line> instruction_status;
@@ -511,7 +514,107 @@ bool Scoreboard::issue_instruction(int clock_time, struct instruction_struct new
     //Success
     return true;
 }
-mem_addr get_read_buffer_value(mem_addr op_code, mem_addr dest)
+void Scoreboard::instruction_complete(int total_cycles_spent, struct instruction_struct complete_instruction)
+{
+    //update instruction status
+    int j = 0;
+    while(j < instruction_status.size())
+    {
+        if(instruction_status[j].pc == complete_instruction.pc)
+        {
+            instruction_status[j].execute_finished = total_cycles_spent;
+        }
+        j++;
+    }
+
+    //update functional unit status
+    j = 0;
+    while(j < fu_status.size())
+    {
+        if(fu_status[j].pc == complete_instruction.pc)
+        {
+            fu_status[j] = {functional_unit_id(fu_status[j].op),0,0,0,0,0,0,0,0,0,0};
+        }
+        j++;
+    }
+}
+
+bool Scoreboard::can_write_out(struct instruction_struct write_out_instruction)
+{
+    //find instructions with src same as write_out dest
+    int j = 0;
+    while(j < fu_status.size())
+    {
+        if(fu_status[j].fj == write_out_instruction.fi || fu_status[j].fk == write_out_instruction.fi)
+        {
+            //check to make sure they have read their operands (instruciton status .read)
+            int i = 0;
+            while(i<instruction_status.size())
+            {
+                if(instruction_status[i].pc == fu_status[j].pc)
+                {
+                    if(instruction_status[i].read == 0)
+                    {
+                        return false;
+                    }
+                }
+                i++;
+            }
+        }
+        j++;
+    }
+    //no instrucitons with src same as write_out dest
+    return true;
+}
+
+void instruction_writen(int total_cycles_spent, struct instruction_struct complete_instruction)
+{
+    //update instruction status
+    int i = 0;
+    while(i<instruction_status.size())
+    {
+        if(instruction_status[i].pc == complete_instruction.pc)
+        {
+            instruction_status[i].write_resutls = total_cycles_spent;
+        }
+        i++;
+    }
+    // update functional unit status
+    int j = 0;
+    while(j < fu_status.size())
+    {
+        if(fu_status[j].fj == complete_instruction.fi)
+        {
+            fu_status[j].qj = 0;
+            fu_status[j].rj = true;
+        }
+        if(fu_status[j].fk == complete_instruction.fi)
+        {
+            fu_status[j].qk = 0;
+            fu_status[j].rk = true;
+        }
+        j++;
+    }
+
+    // remove it from results status
+
+    //NOPs
+    if (functional_unit_id(complete_instruction.op) == 0)
+    {
+        cout << "Error: Tried to get value for a NOP in the read buffer.[3]" << endl;
+        return 0;
+    }
+    if(is_int_register_bank(complete_instruction.op))
+    {
+        integer_register_result_status[dest] = 0;
+    }
+    else
+    {
+        floating_register_result_status[dest] = 0;
+    }
+}
+
+mem_addr Scoreboard::get_read_buffer_value(mem_addr op_code, mem_addr dest)
 {
     //selects the correct buffer,
     //looks for an empty buffer in the dest place, if any, return false
@@ -539,14 +642,7 @@ bool Scoreboard::is_int_register_bank(mem_addr op_code)
         case INTEGER_ALU_ID:
         case MEMORY_UNIT_ID: //B BRANCH
         {
-            if(op_code == 14 || op_code == 15 ) // L.D & S.D
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
+            return true;
             break;
         }
         case FLOATING_MULTIPLIER_ID: //BEQZ BRACH IF EQUAL TO ZERO
