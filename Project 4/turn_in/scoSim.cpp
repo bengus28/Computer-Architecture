@@ -64,6 +64,7 @@ private:
 	int total_nops;
 	std::vector<instruction_struct> read_operands_buffer;
 	std::vector<instruction_struct> instructions_in_functional_units;
+	std::vector<instruction_struct> write_out_buffer;
 };
 
 void PressAnyKey(void)
@@ -322,12 +323,13 @@ void Sim::read_instruction()
 				}
 				case 14: // L.D load
 				{
-					read_operands_buffer[k].float_op_A = floating_registers->read(read_operands_buffer[k].second_reg_name);
+					read_operands_buffer[k].op_A = registers->read(read_operands_buffer[k].second_reg_name);
 					break;
 				}
 				case 15: // S.D -- store
 				{
-					read_operands_buffer[k].float_op_A = floating_registers->read(read_operands_buffer[k].second_reg_name);
+					read_operands_buffer[k].op_A = registers->read(read_operands_buffer[k].second_reg_name);
+					read_operands_buffer[k].float_op_A = floating_registers->read(read_operands_buffer[k].first_reg_name);
 					break;
 				}
 				case 16: // add
@@ -933,35 +935,249 @@ void Sim::write_out()
 //=========================================================================================
 void Sim::floating_multiply()
 {
-	//TODO: Check buffer to find new instruciton, do computaion, add to vector
-		// Go through float_mult vectror and move them one clock cycle
-		// if one has 0 clock cycles left move them to write buffer
-
+	int i = 0;
+	while(i < instructions_in_functional_units.size())
+	{
+		if(3 == scoreboard_current->fuctional_units_id(instructions_in_functional_units[i].op))
+		{
+			if(instructions_in_functional_units[i].clocks_left == 0)
+			{
+				//do the instruciton
+				switch(instructions_in_functional_units[i].op)
+				{
+					case 12: //FMUL
+					{
+						instructions_in_functional_units[i].floating_alu_results = instructions_in_functional_units[i].float_op_A * instructions_in_functional_units[i].float_op_B;
+						break;
+					}
+					default:
+					{
+						cout << "Error: There was an error with the floating multiply functional unit." << endl;
+						cout << "PC: " << std::hex << instructions_in_functional_units[i].pc << endl;
+						cout << "Current Istruction: " <<std::hex << instructions_in_functional_units[i].instruction << endl;
+						more_instructions = false;
+						break;
+					}
+				}
+				//put it in write buffer
+				instructions_in_functional_units[i].used = false;
+				instructions_in_functional_units[i].ready = false;
+				write_out_buffer.push_back(instructions_in_functional_units[i]);
+				//erase it from the instructions_in_functional_units
+				instructions_in_functional_units.erase(i);
+				i--;
+			}
+			else
+			{
+				instructions_in_functional_units[i].clocks_left--;
+			}
+		}
+		i++;
+	}
 }
 void Sim::floating_add()
 {
-	//TODO: Check buffer to find new instruciton, do computaion, add to vector
-		// Go through float_add vectror and move them one clock cycle
-		// if one has 0 clock cycles left move them to write buffer
-
-
+	int i = 0;
+	while(i < instructions_in_functional_units.size())
+	{
+		if(2 == scoreboard_current->fuctional_units_id(instructions_in_functional_units[i].op))
+		{
+			if(instructions_in_functional_units[i].clocks_left == 0)
+			{
+				//do the instruciton
+				switch(instructions_in_functional_units[i].op)
+				{
+					case 11: //FADD
+					{
+						instructions_in_functional_units[i].floating_alu_results = instructions_in_functional_units[i].float_op_A + instructions_in_functional_units[i].float_op_B;
+						break;
+					}
+					case 13: //FSUB
+					{
+						instructions_in_functional_units[i].floating_alu_results = instructions_in_functional_units[i].float_op_A - instructions_in_functional_units[i].float_op_B;
+						break;
+					}
+					default:
+					{
+						cout << "Error: There was an error with the floating multiply functional unit." << endl;
+						cout << "PC: " << std::hex << instructions_in_functional_units[i].pc << endl;
+						cout << "Current Istruction: " <<std::hex << instructions_in_functional_units[i].instruction << endl;
+						more_instructions = false;
+						break;
+					}
+				}
+				//put it in write buffer
+				instructions_in_functional_units[i].used = false;
+				instructions_in_functional_units[i].ready = false;
+				write_out_buffer.push_back(instructions_in_functional_units[i]);
+				//erase it from the instructions_in_functional_units
+				instructions_in_functional_units.erase(i);
+				i--;
+			}
+			else
+			{
+				instructions_in_functional_units[i].clocks_left--;
+			}
+		}
+		i++;
+	}
 }
 void Sim::integer_alu()
 {
-	//TODO: Check buffer to find new instruciton,, add to vector
-		// Go through int_alu vectror and move them one clock cycle
-		// if one has 0 clock cycles left,  do computaion move them to write buffer or
-	// update pc if needed (branches)
+	int i = 0;
+	while(i < instructions_in_functional_units.size())
+	{
+		if(1 == scoreboard_current->fuctional_units_id(instructions_in_functional_units[i].op))
+		{
+			if(instructions_in_functional_units[i].clocks_left == 0)
+			{
+				//do the instruciton
+				switch(instructions_in_functional_units[i].op)
+				{
+					case 1: // ADDI
+					{
+						instructions_in_functional_units[i].alu_results = instructions_in_functional_units[i].op_A + instructions_in_functional_units[i].immediate;
+						break;
+					}
+					case 2: //B BRANCH
+					{
+						pc = instructions_in_functional_units[i].pc + instructions_in_functional_units[i].immediate;
+						break;
+					}
+					case 3: //BEQZ BRACH IF EQUAL TO ZERO
+					{
+						if (instructions_in_functional_units[i].op_A == 0)
+						{
+							pc = instructions_in_functional_units[i].pc + instructions_in_functional_units[i].immediate;
+						}
+						break;
+					}
+					case 4: //BGE BRANCH IF GREATER OR EQUAL $t0,$t1,target,  $t0 >= $t1
+					{
+						if(instructions_in_functional_units[i].op_A >= instructions_in_functional_units[i].op_B)
+						{
+							pc = instructions_in_functional_units[i].pc + instructions_in_functional_units[i].immediate;
+						}
+						break;
+					}
+					case 5: //BNE BRANCH IF NOT EQUAL  $t0,$t1,target, $t0 <> $t1
+					{
+						if(instructions_in_functional_units[i].op_A != instructions_in_functional_units[i].op_B)
+						{
+							pc = instructions_in_functional_units[i].pc + instructions_in_functional_units[i].immediate;
+						}
+						break;
+					}
+					case 9: // SUBI
+					{
+						instructions_in_functional_units[i].alu_results = instructions_in_functional_units[i].op_A - instructions_in_functional_units[i].immediate;
+						break;
+					}
+					case 16: // ADD
+					{
+						instructions_in_functional_units[i].alu_results = instructions_in_functional_units[i].op_A + instructions_in_functional_units[i].op_B;
+						break;
+					}
+					default:
+					{
+						cout << "Error: There was an error with the ALU functional unit." << endl;
+						cout << "PC: " << std::hex << instructions_in_functional_units[i].pc << endl;
+						cout << "Current Istruction: " <<std::hex << instructions_in_functional_units[i].instruction << endl;
+						more_instructions = false;
+						break;
+					}
+
+				}
+				//put it in write buffer, we do not add branches to write out
+				if ( 2 != instructions_in_functional_units[i].op && 3 != instructions_in_functional_units[i].op && 4 != instructions_in_functional_units[i].op && 5 != instructions_in_functional_units[i].op && )
+				{
+					instructions_in_functional_units[i].used = false;
+					instructions_in_functional_units[i].ready = false;
+					write_out_buffer.push_back(instructions_in_functional_units[i]);
+				}
+				//erase it from the instructions_in_functional_units
+				instructions_in_functional_units.erase(i);
+				i--;
+			}
+			else
+			{
+				instructions_in_functional_units[i].clocks_left--;
+			}
+		}
+		i++;
+	}
 }
 void Sim::memory_write()
 {
-	//TODO: Check buffer to find new instruciton, add to vector
-		// Go through float_mult vectror and move them one clock cycle
-		// if one has 0 clock cycles do read / store,er
+	int i = 0;
+	while(i < instructions_in_functional_units.size())
+	{
+		if(4 == scoreboard_current->fuctional_units_id(instructions_in_functional_units[i].op))
+		{
+			if(instructions_in_functional_units[i].clocks_left == 0)
+			{
+				//do the instruciton
+				switch(instructions_in_functional_units[i].op)
+				{
+					case 6: // LA
+					{
+						instructions_in_functional_units[i].mem_read_results = mem->read(instructions_in_functional_units[i].immedtiate);
+						break;
+					}
+					case 7: // Load Byte
+					{
+						instructions_in_functional_units[i].alu_results = instructions_in_functional_units[i].op_A + instructions_in_functional_units[i].immediate;
+						instructions_in_functional_units[i].mem_read_results = mem->read_byte(instructions_in_functional_units[i].alu_results, instructions_in_functional_units[i].alu_results%4);
+						break;
+					}
+					case 8: //B LI
+					{
+						instructions_in_functional_units[i].mem_read_results = mem->read(instructions_in_functional_units[i].immedtiate);
+						break;
+					}
+					case 10: //SYSCall
+					{
+						//do Nothing
+						break;
+					}
+					case 14: // L.D
+					{
+						instructions_in_functional_units[i].alu_results = instructions_in_functional_units[i].op_A + instructions_in_functional_units[i].immediate;
+						instructions_in_functional_units[i].float_mem_read_results = mem->read(instructions_in_functional_units[i].alu_results);
+						break;
+					}
+					case 15: // S.D
+					{
+						instructions_in_functional_units[i].alu_results = instructions_in_functional_units[i].op_A + instructions_in_functional_units[i].immediate;
+						mem->write(instructions_in_functional_units[i].alu_results, instructions_in_functional_units[i].float_op_A);
+						break;
+					}
+					default:
+					{
+						cout << "Error: There was an error with the ALU functional unit." << endl;
+						cout << "PC: " << std::hex << instructions_in_functional_units[i].pc << endl;
+						cout << "Current Istruction: " <<std::hex << instructions_in_functional_units[i].instruction << endl;
+						more_instructions = false;
+						break;
+					}
 
+				}
+				//put it in write buffer, we do not add branches to write out
+				instructions_in_functional_units[i].used = false;
+				instructions_in_functional_units[i].ready = false;
+				write_out_buffer.push_back(instructions_in_functional_units[i]);
+				//erase it from the instructions_in_functional_units
+				instructions_in_functional_units.erase(i);
+				i--;
+			}
+			else
+			{
+				instructions_in_functional_units[i].clocks_left--;
+			}
+		}
+		i++;
+	}
 }
-
-
 
 int Sim::instruction_op()
 {															//Removes the memory address from instruction, bits 32-24
