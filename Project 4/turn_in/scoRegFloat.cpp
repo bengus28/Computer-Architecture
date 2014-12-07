@@ -81,7 +81,7 @@ float_mem Floating_Point_Register_Bank::read(mem_addr memory_address_in )					//
 void Floating_Point_Register_Bank::print_memory()										//To give a visual of the Register Memory space
 {
     int memory_index = 0;
-    cout <<	"==== REGISTERS ======================" << endl;
+    cout <<	"==== Floating Point Registers ===" << endl;
     while (memory_index < REGISTER_LENGTH_FLOAT)
     {
         if (floating_registers[memory_index] != 0)
@@ -90,5 +90,5 @@ void Floating_Point_Register_Bank::print_memory()										//To give a visual of
         }
         memory_index++;
     }
-    cout <<	"==========================" << endl;
+    cout <<	"=================================" << endl;
 }

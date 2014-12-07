@@ -254,6 +254,11 @@ int Scoreboard::functional_unit_id(mem_addr op_code)
             return MEMORY_UNIT_ID;
             break;
         }
+        case 18: // store floating
+        {
+            return MEMORY_UNIT_ID;
+            break;
+        }
         default:
             cout << "Error: There was an error with the finding a Functional Unit id." << endl;
             cout << "Given OP code: " << std::dec << op_code << endl;
@@ -270,7 +275,6 @@ bool Scoreboard::open_functional_unit(int functional_unit_id)
     {
         if (fu_status[i].unit_id == functional_unit_id && fu_status[i].busy == false )
         {
-            cout << endl << "_________________________________________________________________________________________________true true"<<endl;
             return true;
         }
         i++;
@@ -396,6 +400,20 @@ bool Scoreboard::issue_instruction(int clock_time, struct instruction_struct new
                     fu_status[i].pc = new_instruction.pc;
                     break;
                 }
+                case 18: // floating register store
+                {
+                    fu_status[i].busy = true;
+                    fu_status[i].op = new_instruction.op;
+                    fu_status[i].fi = new_instruction.first_reg_name;
+                    fu_status[i].fj = new_instruction.second_reg_name;;
+                    fu_status[i].fk = 0;
+                    fu_status[i].qj = get_read_buffer_value(new_instruction.op, new_instruction.second_reg_name);
+                    fu_status[i].qk = 0;
+                    fu_status[i].rj = (fu_status[i].qj == 0) ? true : false;
+                    fu_status[i].rk = true;
+                    fu_status[i].pc = new_instruction.pc;
+                    break;
+                }
                 // Branches
                 case 2:
                 {
@@ -484,6 +502,7 @@ bool Scoreboard::issue_instruction(int clock_time, struct instruction_struct new
         case 15:
         case 16:
         case 17:
+        case 18:
         {
             //NOPs
             if (functional_unit_id(new_instruction.op) == 0)

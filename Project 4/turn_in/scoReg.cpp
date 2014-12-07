@@ -80,7 +80,7 @@ mem_addr Register_Bank::read(mem_addr memory_address_in )					//Allows cpu to re
 void Register_Bank::print_memory()										//To give a visual of the Register Memory space
 {
 	int memory_index = 0;
-	cout <<	"==== REGISTERS ======================" << endl;
+	cout <<	"==== REGISTERS ===========" << endl;
 	while (memory_index < REGISTER_LENGTH)
 	{
 		if (registers[memory_index] != 0)
