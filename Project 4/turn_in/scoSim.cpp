@@ -51,6 +51,7 @@ private:
 	void floating_add();
 	void integer_alu();
 	void memory_write();
+	float_mem signed_immediate_float(mem_addr m_addr);
 	mem_addr pc;								//Program counter
 	Memory *mem;								//Memory object
 	Register_Bank *registers;					//CPU internal registers
@@ -93,7 +94,7 @@ Sim::Sim()
 	fetch_buffer next_instruction = {0,0,pc};
 	more_instructions = true;
 	total_instructions_executed = 0;
-	total_cycles_spent = 0;
+	total_cycles_spent = 1;
 	total_nops = 0;
 }
 
@@ -101,25 +102,35 @@ void Sim::run()
 {
 	while(more_instructions)
 	{
+		cout << pc << endl;
+		//cout << "Current instruction::::" << std::hex << current_instruction << endl << endl <<endl;
 		PressAnyKey();
-		//mem->print_memory();
+		mem->print_memory();
+		registers->print_memory();
+		floating_registers->print_memory();
+		cout << "			Clock #: " << total_cycles_spent << endl;
 		print_buffers();
-		scoreboard_current->print();
 
+
+		cout << endl << "		Fetch / issue " << endl;
 		fetch_and_issue_instruction();
 		scoreboard_next->print();
+		cout << endl << "		Read operands " << endl;
 		read_instruction();
 		scoreboard_next->print();
+		cout << endl << "		functional units " << endl;
 		run_functional_units();
 		scoreboard_next->print();
+		cout << endl << "		Write " << endl;
 		write_out();
+		scoreboard_next->print();
 
 		total_cycles_spent++;
 		scoreboard_current->deep_copy(scoreboard_next);
 
 		if(scoreboard_next->all_instructions_complete() && mem->read(pc) == 0 ) //All instructions complete and current instruciton is nop
 		{
-			more_instructions = false;
+			//more_instructions = false;
 			cout << "Number of Instructions Executed (IC): " << std::dec<< total_instructions_executed << endl;
 			cout << "Number of Cycles Spent in Execution (C): " <<std::dec<<  total_cycles_spent << endl;
 			cout << "Number of NOPs: " << std::dec << total_nops << endl;
@@ -141,6 +152,18 @@ void Sim::fetch_and_issue_instruction()
 	current_instruction = mem->read(pc);
 	bool issue_instruction = true;
 	mem_addr op_code = instruction_op();
+
+
+	//NOP
+	if (op_code == 0)
+	{
+		//NOP
+		issue_instruction = false;
+		pc++;
+		total_instructions_executed++;
+		total_nops++;
+	}
+
 	//Is a functional unit free?
 	//( Does it have any structural hazards? )
 	int unit_id = scoreboard_current->functional_unit_id(op_code);
@@ -158,23 +181,13 @@ void Sim::fetch_and_issue_instruction()
 	if(issue_instruction)
 	{
 		//Issue instruciton
-		if (current_instruction == 0)
-		{
-			issue_instruction = false;
-			pc++;
-			total_instructions_executed++;
-			total_nops++;
-		}
-		else
-		{
-			pc++;
-			total_instructions_executed++;
-			//Add it to the correct read-operands buffer
-			instruction_struct new_instruction = populate_new_instruction();
-			read_operands_buffer.push_back(new_instruction);
-			//Update scoreboard
-			scoreboard_next->issue_instruction(total_cycles_spent,new_instruction);
-		}
+		pc++;
+		total_instructions_executed++;
+		//Add it to the correct read-operands buffer
+		instruction_struct new_instruction = populate_new_instruction();
+		read_operands_buffer.push_back(new_instruction);
+		//Update scoreboard
+		scoreboard_next->issue_instruction(total_cycles_spent,new_instruction);
 	}
 	else
 	{
@@ -341,6 +354,11 @@ void Sim::read_instruction()
 					read_operands_buffer[k].op_B = registers->read(read_operands_buffer[k].third_reg_name);
 					break;
 				}
+				case 17: //LI LOAD IMMEDIATE Float()
+				{
+					//Do nothing
+					break;
+				}
 				default:
 					cout << "Error: There was an error with reading operands" << endl;
 					cout << "PC: " << std::hex << read_operands_buffer[k].pc << endl;
@@ -357,17 +375,17 @@ void Sim::read_instruction()
 			{
 				case 1:
 				{
-					updated_instruction.clocks_left = 1;
+					updated_instruction.clocks_left = 2;
 					break;
 				}
 				case 2:
 				{
-					updated_instruction.clocks_left = 1;
+					updated_instruction.clocks_left = 2;
 					break;
 				}
 				case 3:
 				{
-					updated_instruction.clocks_left = 5;
+					updated_instruction.clocks_left = 6;
 					break;
 				}
 				case 4:
@@ -428,7 +446,7 @@ void Sim::write_out()
 	while(i < write_out_buffer.size())
 	{
 		//Check if we can wirte it
-		if(scoreboard_current->can_write_out(write_out_buffer[i]))
+		if(scoreboard_current->can_write_out(total_cycles_spent,write_out_buffer[i]))
 		{
 			//write it
 			switch(write_out_buffer[i].op)
@@ -575,6 +593,11 @@ void Sim::write_out()
 					registers->write(write_out_buffer[i].first_reg_name, write_out_buffer[i].alu_results);
 					break;
 				}
+				case 17: //LI LOAD IMMEDIATE
+				{
+					floating_registers->write(write_out_buffer[i].first_reg_name, write_out_buffer[i].float_mem_read_results);
+					break;
+				}
 				default:
 					cout << "Error: There was an error with reading operands" << endl;
 					cout << "PC: " << std::hex << write_out_buffer[i].pc << endl;
@@ -719,6 +742,7 @@ void Sim::integer_alu()
 						if (instructions_in_functional_units[i].op_A == 0)
 						{
 							pc = instructions_in_functional_units[i].pc + instructions_in_functional_units[i].immediate;
+							cout << endl << "branch taken: ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << pc << endl <<endl;
 						}
 						break;
 					}
@@ -727,6 +751,7 @@ void Sim::integer_alu()
 						if(instructions_in_functional_units[i].op_A >= instructions_in_functional_units[i].op_B)
 						{
 							pc = instructions_in_functional_units[i].pc + instructions_in_functional_units[i].immediate;
+							cout << endl << "branch taken: ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << pc << endl <<endl;
 						}
 						break;
 					}
@@ -793,7 +818,7 @@ void Sim::memory_write()
 				{
 					case 6: // LA
 					{
-						instructions_in_functional_units[i].mem_read_results = *mem->read(instructions_in_functional_units[i].immediate);
+						instructions_in_functional_units[i].mem_read_results = *mem->read(instructions_in_functional_units[i].op_A);
 						break;
 					}
 					case 7: // Load Byte
@@ -804,7 +829,7 @@ void Sim::memory_write()
 					}
 					case 8: //B LI
 					{
-						instructions_in_functional_units[i].mem_read_results = *mem->read(instructions_in_functional_units[i].immediate);
+						instructions_in_functional_units[i].mem_read_results = instructions_in_functional_units[i].immediate;
 						break;
 					}
 					case 10: //SYSCall
@@ -822,6 +847,12 @@ void Sim::memory_write()
 					{
 						instructions_in_functional_units[i].alu_results = instructions_in_functional_units[i].op_A + instructions_in_functional_units[i].immediate;
 						mem->write(instructions_in_functional_units[i].alu_results, instructions_in_functional_units[i].float_op_A);
+						break;
+					}
+					case 17: //B LI (float)
+					{
+						//instructions_in_functional_units[i].float_mem_read_results = instructions_in_functional_units[i].immediate;
+						instructions_in_functional_units[i].float_mem_read_results = instructions_in_functional_units[i].float_op_A;
 						break;
 					}
 					default:
@@ -939,6 +970,31 @@ int8_t Sim::signed_immediate(mem_addr m_addr)				//Helper method for handling im
 	return 0;
 }
 
+float_mem Sim::signed_immediate_float(mem_addr m_addr)				//Helper method for handling immediates and signing them correctly
+{
+	mem_addr sign_bit = m_addr, value = m_addr;
+	sign_bit = sign_bit >> 15;
+	value = value <<18;
+	value = value >>18;
+	float return_value = 0;
+	if (sign_bit == 1)
+	{
+		return_value = 0 - value;
+		cout << endl << endl << endl << "=====================" << return_value << endl;
+		return_value = return_value/100;
+		cout << endl << endl << endl << "=====================" << return_value << endl;
+		return return_value;
+	}
+	else
+	{
+		return_value = 0 + value;
+		return_value = return_value/100;
+		cout << endl << endl << endl << "=====================" << return_value << endl;
+		return return_value;
+	}
+	return 0;
+}
+
 struct instruction_struct Sim::populate_new_instruction()
 {
 	switch(instruction_op())
@@ -968,10 +1024,21 @@ struct instruction_struct Sim::populate_new_instruction()
 		}
 		//one register, one immediate
 		case 3:
-		case 6:
 		case 8:
 		{
 			instruction_struct new_instruction = {pc,instruction_op_mem(),*current_instruction,signed_immediate(third_register()),first_register(),0,0,0,0,0,0,0,0,0,0,0,0};
+			return new_instruction;
+			break;
+		}
+		case 17:
+		{
+			instruction_struct new_instruction = {pc,instruction_op_mem(),*current_instruction,signed_immediate(immediate_value()),first_register(),0,0,0,0,0,0,signed_immediate_float(immediate_value()),0,0,0,0,0};
+			return new_instruction;
+			break;
+		}
+		case 6:
+		{
+			instruction_struct new_instruction = {pc,instruction_op_mem(),*current_instruction,0,first_register(),0,0,immediate_value()	,0,0,0,0,0,0,0,0,0};
 			return new_instruction;
 			break;
 		}
@@ -1022,19 +1089,19 @@ void Sim::print_buffers()
 		cout << std::hex << "  " << read_operands_buffer[j].instruct << endl;
 		j++;
 	}
-	cout << "Instructions in functional units" << endl;
+	cout << endl << "Instructions in functional units" << endl;
 	j = 0;
 	while(j < instructions_in_functional_units.size())
 	{
 		cout << std::hex << "  " << instructions_in_functional_units[j].instruct << "  " << instructions_in_functional_units[j].clocks_left << endl;
 		j++;
 	}
-	cout << "Ready to be writen instructions " << endl;
+	cout <<endl<< "Ready to be writen instructions " << endl;
 	j = 0;
 	while(j < write_out_buffer.size())
 	{
 		cout << std::hex << "  " << write_out_buffer[j].instruct << endl;
 		j++;
 	}
-	cout << "+++++++++++++++++++++++++++++++++++++++++++++" << endl;
+	cout <<endl<< "+++++++++++++++++++++++++++++++++++++++++++++" << endl;
 }

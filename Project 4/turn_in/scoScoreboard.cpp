@@ -95,7 +95,7 @@ public:
     bool issue_instruction(int clock_time, struct instruction_struct new_instruction);
     void instruction_complete(int total_cycles_spent, struct instruction_struct complete_instruction);
     void instruction_writen(int total_cycles_spent, struct instruction_struct complete_instruction);
-    bool can_write_out(struct instruction_struct write_out_instruction);
+    bool can_write_out(int total_cycles_spent ,struct instruction_struct write_out_instruction);
     mem_addr get_read_buffer_value(mem_addr op_code, mem_addr dest);
     bool is_int_register_bank(mem_addr op_code);
     void print();       //Prints out current score board state
@@ -249,6 +249,11 @@ int Scoreboard::functional_unit_id(mem_addr op_code)
             return INTEGER_ALU_ID;
             break;
         }
+        case 17: // add
+        {
+            return MEMORY_UNIT_ID;
+            break;
+        }
         default:
             cout << "Error: There was an error with the finding a Functional Unit id." << endl;
             cout << "Given OP code: " << std::dec << op_code << endl;
@@ -265,8 +270,10 @@ bool Scoreboard::open_functional_unit(int functional_unit_id)
     {
         if (fu_status[i].unit_id == functional_unit_id && fu_status[i].busy == false )
         {
+            cout << endl << "_________________________________________________________________________________________________true true"<<endl;
             return true;
         }
+        i++;
     }
     return false;
 }
@@ -277,7 +284,7 @@ bool Scoreboard::write_buffer_open(mem_addr op_code, mem_addr dest)
     //looks for an empty buffer in the dest place, if any, return false
 
     //NOPs
-    if (functional_unit_id(op_code)==0)
+    if (functional_unit_id(op_code) == 0)
     {
         return true;
     }
@@ -375,6 +382,7 @@ bool Scoreboard::issue_instruction(int clock_time, struct instruction_struct new
                 //one register, one immediate
                 case 6:
                 case 8:
+                case 17:
                 {
                     fu_status[i].busy = true;
                     fu_status[i].op = new_instruction.op;
@@ -475,6 +483,7 @@ bool Scoreboard::issue_instruction(int clock_time, struct instruction_struct new
         case 14:
         case 15:
         case 16:
+        case 17:
         {
             //NOPs
             if (functional_unit_id(new_instruction.op) == 0)
@@ -520,7 +529,7 @@ void Scoreboard::instruction_complete(int total_cycles_spent, struct instruction
     int j = 0;
     while(j < instruction_status.size())
     {
-        if(instruction_status[j].pc == complete_instruction.pc)
+        if(instruction_status[j].pc == complete_instruction.pc && instruction_status[j].execute_finished ==0)
         {
             instruction_status[j].execute_finished = total_cycles_spent;
         }
@@ -539,7 +548,7 @@ void Scoreboard::instruction_complete(int total_cycles_spent, struct instruction
     }
 }
 
-bool Scoreboard::can_write_out(struct instruction_struct write_out_instruction)
+bool Scoreboard::can_write_out(int total_cycles_spent, struct instruction_struct write_out_instruction)
 {
     //find instructions with src same as write_out dest
     int j = 0;
@@ -564,6 +573,17 @@ bool Scoreboard::can_write_out(struct instruction_struct write_out_instruction)
         j++;
     }
     //no instrucitons with src same as write_out dest
+    // not the same clock cycle
+    j = 0;
+    while(j < instruction_status.size())
+    {
+        if(instruction_status[j].pc == write_out_instruction.pc && (instruction_status[j].execute_finished == 0 || instruction_status[j].execute_finished == total_cycles_spent))
+        {
+            //it is the same cycle as finished functional unit
+            return false;
+        }
+        j++;
+    }
     return true;
 }
 
@@ -573,7 +593,7 @@ void Scoreboard::instruction_writen(int total_cycles_spent, struct instruction_s
     int i = 0;
     while(i<instruction_status.size())
     {
-        if(instruction_status[i].pc == complete_instruction.pc)
+        if(instruction_status[i].pc == complete_instruction.pc && instruction_status[i].write_resutls ==0)
         {
             instruction_status[i].write_resutls = total_cycles_spent;
         }

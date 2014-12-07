@@ -34,6 +34,27 @@ clean up:
 
 Results
 -------------
+To run any of these programs change line 78 of scoMem.cpp, current default is lab4c.s.
+
+
+**The simple program: (lab4a.s)**
+
+
+Number of Instructions Executed (IC): 43
+Number of Cycles Spent in Execution (C): 50
+Number of NOPs: 31
+Goodbye.
+
+
+**The floating point program: (lab4b.s)**
+
+
+Number of Instructions Executed (IC): 58
+Number of Cycles Spent in Execution (C): 118
+Number of NOPs: 15
+Goodbye.
+
+**DTMF loop: (lab4c.s)**
 
 
 

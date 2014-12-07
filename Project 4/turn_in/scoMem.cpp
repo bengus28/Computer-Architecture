@@ -75,7 +75,7 @@ Memory::Memory()  													//Initialize memory
 	char dataArray[41];
 	memset(dataArray,'\0',41);
 	int i = 0;
-	ifstream gpr_file_code ("lab3b.s");
+	ifstream gpr_file_code ("lab4c.s");
 	if (gpr_file_code.is_open())
 	{
 		while ( getline (gpr_file_code,textLine))
