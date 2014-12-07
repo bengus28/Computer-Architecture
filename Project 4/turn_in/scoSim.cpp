@@ -8,9 +8,11 @@
 #include <cstdlib>
 #include <stdio.h>
 #include <iostream>
+#include <vector>
 #include "scoMem.cpp"
 #include "scoReg.cpp"
 #include "scoRegFloat.cpp"
+#include "scoScoreboard.cpp"
 
 using namespace std;
 
@@ -24,31 +26,6 @@ struct fetch_buffer
 	mem_addr instruction_pc;
 }
 
-struct integer_instruction
-{
-	instruction op;
-	instruction instruct;
-	int8_t immediate;
-	mem_addr first_reg_name;
-	mem_addr second_reg_name;
-	mem_addr third_reg_name;
-	instruction op_A;
-	instruction op_B;
-};
-
-struct floating_instruction
-{
-	instruction op;
-	instruction instruct;
-	int8_t immediate;
-	mem_addr first_reg_name;  //A
-	mem_addr second_reg_name; //B
-	mem_addr third_reg_name;
-	float_mem op_A;
-	float_mem op_B;
-};
-
-
 class Sim
 {
 public:
@@ -61,9 +38,11 @@ private:
 	mem_addr second_register();					//Returns bits 16-8
 	mem_addr third_register();					//Returns bits 8-0
 	mem_addr immediate_value();					//Returns bits 16-0
+	struct instruction_struct populate_new_instruction();
+	instruction *current_instruction;			//Pointer to the current instruction
 	void load_next_instruction();				//Takes all the steps to load next instruction
-	void fetch_instruction();
-	void issue_instruction();
+	void fetch_and_issue_instruction();
+	void read_instruction();
 	void run_functional_units();
 	void write_out();
 	void floating_multiply();
@@ -82,7 +61,7 @@ private:
 	int total_instructions_executed;
 	int total_cycles_spent;
 	int total_nops;
-	fetch_buffer next_instruction;
+	std::vector<instruction_struct> read_operands_buffer;
 };
 
 void PressAnyKey(void)
@@ -105,8 +84,8 @@ Sim::Sim()
 	mem = new Memory();
 	registers = new Register_Bank();
 	floating_registers = new Floating_Point_Register_Bank();
-	scoreboard_current = new Score_board();
-	scoreboard_next = new Score_board();
+	scoreboard_current = new Scoreboard();
+	scoreboard_next = new Scoreboard();
 	fetch_buffer next_instruction = {0,0,pc};
 	more_instructions = true;
 	total_instructions_executed = 0;
@@ -125,40 +104,93 @@ void Sim::run()
 		//print_buffers();
 		//scoreboard_current->print();
 
-		fetch_instruction();
-		issue_instruction();
+		fetch_and_issue_instruction();
+		read_instruction();
 		run_functional_units();
 		write_out();
 
 		total_cycles_spent++;
-		//TODO: Check scoreboard to find if there are more instructions to run
-		//TODO: Make current scoreboard = old scoreboard
+		scoreboard_current->deep_copy(scoreboard_next);
+		if(scoreboard_next->all_instructions_complete() && mem->read(pc) == 0 ) //All instructions complete and current instruciton is nop
+		{
+			more_instructions = false;
+			cout << "Number of Instructions Executed (IC): " << std::dec<< total_instructions_executed << endl;
+			cout << "Number of Cycles Spent in Execution (C): " <<std::dec<<  total_cycles_spent << endl;
+			cout << "Number of NOPs: " << std::dec << total_nops << endl;
+			cout << "Goodbye." << endl;
+		}
 	}
 }
 
 //=========================================================================================
-//----------------------------- Fetch Stage -----------------------------------------------
+//----------------------------- Fetch & Issue Stage ---------------------------------------
 //=========================================================================================
 /*
 Used Paramaters:
 Effected buffers:
 */
-void Sim::fetch_instruction()
+void Sim::fetch_and_issue_instruction()
 {
-	//TODO: check if the fetch buffer needs to be updated. and update score board
-	//TODO: change to fetch buffer
-	new_If_Id.instruction_ = mem->read(pc);
+	// Can this instruction be issued? Next three checks will decide.
+	current_instruction = mem->read(pc);
+	bool issue_instruction = true;
+	mem_addr op_code = instruction_op();
+	//Is a functional unit free?
+	//( Does it have any structural hazards? )
+	int unit_id = scoreboard_current->functional_unit_id(op_code);
+	if (!scoreboard_current->open_functional_unit(unit_id))
+	{
+		issue_instruction = false;
+	}
+	//Does any other instruction currently in functional units have the same dest?
+	// (Does it have any WAW hazards?)
+	if(!scoreboard_current->write_buffer_open(op_code,first_register()))
+	{
+		issue_instruction = false;
+	}
+	//Issue instruction (or not)
+	if(issue_instruction)
+	{
+		//Issue instruciton
+		if (next_instruction == 0)
+		{
+			issue_instruciton = false;
+			pc++;
+			total_instructions_executed++;
+			total_nops++;
+		}
+		else
+		{
+			pc++;
+			total_instructions_executed++;
+			//Add it to the correct read-operands buffer
+			instruction_struct new_instruction = populate_new_instruction();
+			read_operands_buffer.push_back(new_instruction);
+			//Update scoreboard
+			scoreboard_current->issue_instruction(total_cycles_spent,new_instruction);
+		}
+	}
+	else
+	{
+		//Do not issue instruction
+		//This is a stall
+		//Do nothing.
+	}
+
+	//TODO:. and update score board, ocupy a functional unit
+	//TODO: change to fetch -flex buffer , update number of instructions and number of nops
+
 }
 //=========================================================================================
-//----------------------------- Issue Instruciton Stage -----------------------------------
+//----------------------------- Read Operands Stage ---------------------------------------
 //=========================================================================================
 /*
 Used Paramaters:
 Effected buffers:
 */
-void Sim::issue_instruction()
+void Sim::read_instruction()
 {
-	//TODO:check scoreboard, if clear take instruction out of the fetch buffer and clear fetch buffer, increment pc
+	//TODO:check scoreboard, if clear take instruction out of the fetch - flex buffer and clear fetch buffer, increment pc
 		//read the operands and stick it in the correct buffer for functional unit and update scoreboard
 
 
@@ -979,7 +1011,7 @@ int8_t Sim::signed_immediate(mem_addr m_addr)				//Helper method for handling im
 	int return_value = 0;
 	if (sign_bit == 1)
 	{
-		return_value = 0 -value;
+		return_value = 0 - value;
 		return return_value;
 	}
 	else
@@ -987,6 +1019,64 @@ int8_t Sim::signed_immediate(mem_addr m_addr)				//Helper method for handling im
 		return value;
 	}
 	return 0;
+}
+
+void Sim::populate_new_instruction()
+{
+	instruction_struct new_instruction;
+	swtich(instruction_op())
+	{
+		//all three registers
+		case 16:
+		case 11:
+		case 12:
+		case 13:
+		{
+			new_instruction = {pc,instruction_op(),0,first_register(),second_register(), third_register(),0,0,0,0,0,0,0,0};
+			break;
+		}
+		//two registers, one immediate
+		case 1:
+		case 4:
+		case 5:
+		case 7:
+		case 9:
+		case 14:
+		case 15:
+		{
+			new_instruction = {pc,instruction_op(),signed_immediate(third_register()),first_register(),second_register(),0,0,0,0,0,0,0,0,0};
+			break;
+		}
+		//one register, one immediate
+		case 3:
+		case 6:
+		case 8:
+		{
+			new_instruction = {pc,instruction_op(),immediate_value(),first_register(),0,0,0,0,0,0,0,0,0,0};
+			break;
+		}
+		// just immediate
+		case 2:
+		{
+			new_instruction = {pc,instruction_op(),signed_immediate(third_register()),0,0,0,0,0,0,0,0,0,0,0};
+			break;
+		}
+		// syscall
+		case 10:
+		{
+			new_instruction = {pc,instruction_op(),0,1,3,0,0,0,0,0,0,0,0,0};
+			break;
+		}
+		default:
+		{
+			cout << "Error: There was an error in populating the new instruciton" << endl;
+			cout << "PC: " << std::hex << pc << endl;
+			cout << "Current Istruction: " <<std::hex << current_instruction << endl;
+			more_instructions = false;
+			break;
+		}
+	}
+	return new_instruction;
 }
 
 void Sim::load_next_instruction()
