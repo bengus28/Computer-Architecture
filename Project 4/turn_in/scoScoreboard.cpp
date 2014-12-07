@@ -62,6 +62,9 @@ struct instruction_struct
     float_mem float_flop_B;
     float_mem float_alu_results;
     float_mem float_mem_read_results;
+    bool used;
+    bool ready;
+    int clocks_left;
 };
 
 struct fu_status_struct
@@ -342,8 +345,8 @@ bool Scoreboard::issue_instruction(int clock_time, struct instruction_struct new
                     fu_status[i].fk = new_instruction.third_reg_name;
                     fu_status[i].qj = get_read_buffer_value(new_instruction.second_reg_name);
                     fu_status[i].qk = get_read_buffer_value(new_instruction.third_reg_name);
-                    fu_status[i].rj = (fu_status[i].qj == 0) ? false : true;
-                    fu_status[i].rk = (fu_status[i].qk == 0) ? false : true;
+                    fu_status[i].rj = (fu_status[i].qj == 0) ? true : false;
+                    fu_status[i].rk = (fu_status[i].qk == 0) ? true : false;
                     fu_status[i].pc = new_instruction.pc;
                     break;
                 }
@@ -361,8 +364,8 @@ bool Scoreboard::issue_instruction(int clock_time, struct instruction_struct new
                     fu_status[i].fk = 0;
                     fu_status[i].qj = get_read_buffer_value(new_instruction.second_reg_name);
                     fu_status[i].qk = 0;
-                    fu_status[i].rj = (fu_status[i].qj == 0) ? false : true;
-                    fu_status[i].rk = false;
+                    fu_status[i].rj = (fu_status[i].qj == 0) ? true : false;
+                    fu_status[i].rk = true;
                     fu_status[i].pc = new_instruction.pc;
                     break;
                 }
@@ -377,8 +380,8 @@ bool Scoreboard::issue_instruction(int clock_time, struct instruction_struct new
                     fu_status[i].fk = 0;
                     fu_status[i].qj = 0;
                     fu_status[i].qk = 0;
-                    fu_status[i].rj = false;
-                    fu_status[i].rk = false;
+                    fu_status[i].rj = true;
+                    fu_status[i].rk = true;
                     fu_status[i].pc = new_instruction.pc;
                     break;
                 }
@@ -392,8 +395,8 @@ bool Scoreboard::issue_instruction(int clock_time, struct instruction_struct new
                     fu_status[i].fk = 0;
                     fu_status[i].qj = 0;
                     fu_status[i].qk = 0;
-                    fu_status[i].rj = false;
-                    fu_status[i].rk = false;
+                    fu_status[i].rj = true;
+                    fu_status[i].rk = true;
                     fu_status[i].pc = new_instruction.pc;
                     break;
                 }
@@ -407,7 +410,7 @@ bool Scoreboard::issue_instruction(int clock_time, struct instruction_struct new
                     fu_status[i].qj = get_read_buffer_value(new_instruction.first_reg_name);
                     fu_status[i].qk = 0;
                     fu_status[i].rj = (fu_status[i].qj == 0) ? false : true;
-                    fu_status[i].rk = false;
+                    fu_status[i].rk = true;
                     fu_status[i].pc = new_instruction.pc;
                     break;
                 }
@@ -421,8 +424,8 @@ bool Scoreboard::issue_instruction(int clock_time, struct instruction_struct new
                     fu_status[i].fk = new_instruction.second_reg_name;
                     fu_status[i].qj = get_read_buffer_value(new_instruction.first_reg_name);
                     fu_status[i].qk = get_read_buffer_value(new_instruction.second_reg_name);
-                    fu_status[i].rj = (fu_status[i].qj == 0) ? false : true;
-                    fu_status[i].rk = (fu_status[i].qk == 0) ? false : true;
+                    fu_status[i].rj = (fu_status[i].qj == 0) ? true : false;
+                    fu_status[i].rk = (fu_status[i].qk == 0) ? true : false;
                     fu_status[i].pc = new_instruction.pc;
                     break;
                 }
@@ -436,8 +439,8 @@ bool Scoreboard::issue_instruction(int clock_time, struct instruction_struct new
                     fu_status[i].fk = new_instruction.second_reg_name;
                     fu_status[i].qj = get_read_buffer_value(new_instruction.first_reg_name);
                     fu_status[i].qk = get_read_buffer_value(new_instruction.second_reg_name);
-                    fu_status[i].rj = (fu_status[i].qj == 0) ? false : true;
-                    fu_status[i].rk = (fu_status[i].qk == 0) ? false : true;
+                    fu_status[i].rj = (fu_status[i].qj == 0) ? true : false;
+                    fu_status[i].rk = (fu_status[i].qk == 0) ? true : false;
                     fu_status[i].pc = new_instruction.pc;
                     break;
                 }

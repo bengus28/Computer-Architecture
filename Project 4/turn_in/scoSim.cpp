@@ -23,7 +23,8 @@ struct fetch_buffer
 {
 	instruction instruct;
 	bool used;
-	mem_addr instruction_pc;
+	mem_addr pc;
+	bool ready;
 }
 
 class Sim
@@ -62,6 +63,7 @@ private:
 	int total_cycles_spent;
 	int total_nops;
 	std::vector<instruction_struct> read_operands_buffer;
+	std::vector<instruction_struct> instructions_in_functional_units;
 };
 
 void PressAnyKey(void)
@@ -176,10 +178,6 @@ void Sim::fetch_and_issue_instruction()
 		//This is a stall
 		//Do nothing.
 	}
-
-	//TODO:. and update score board, ocupy a functional unit
-	//TODO: change to fetch -flex buffer , update number of instructions and number of nops
-
 }
 //=========================================================================================
 //----------------------------- Read Operands Stage ---------------------------------------
@@ -190,193 +188,212 @@ Effected buffers:
 */
 void Sim::read_instruction()
 {
-	//TODO:check scoreboard, if clear take instruction out of the fetch - flex buffer and clear fetch buffer, increment pc
-		//read the operands and stick it in the correct buffer for functional unit and update scoreboard
-
-
-	if(old_If_Id.instruction_ != 0 ) //nop
+	//Are all operands ready to be read?
+	int i = 0, k = 0;
+	while (k < read_operands_buffer.size())
 	{
-		//cout << std::hex << *(old_If_Id.instruction_) << endl;
-		current_instruction = old_If_Id.instruction_;
-		new_Id_Ex.op = instruction_op();
-		new_Id_Ex.instruct = *current_instruction;
+		i = 0;
+		while (i < scoreboard_current.fu_status.size())
+		{
+			if (fu_status[i].pc == read_operands_buffer[k].pc && read_operands_buffer[k].used == false && read_operands_buffer[k].ready = false)
+			{
+				if(fu_status[i].rj == true && fu_status[i].rk == true);
+				{
+					read_operands_buffer[k].ready = true;
+				}
+			}
+			i++;
+		}
+		k++;
 	}
-	else
+	k = 0;
+	while (k < read_operands_buffer.size())
 	{
-		new_Id_Ex.op = 0;
-		new_Id_Ex.instruct = 0;
-	}
-	switch(new_Id_Ex.op)
-	{
-		case 0:
+		if (read_operands_buffer[k].ready == true)
 		{
-			//Nop
-			new_Id_Ex.immediate = 0 ;
-			new_Id_Ex.first_reg = 0 ;
-			new_Id_Ex.second_reg = 0 ;
-			new_Id_Ex.third_reg = 0 ;
-			new_Id_Ex.op_A = 0 ;
-			new_Id_Ex.op_B = 0 ;
-			break;
-		}
-		case 1: //ADDI ADD IMMEDIATE
-		{
-			new_Id_Ex.immediate = signed_immediate(third_register());
-			new_Id_Ex.second_reg = second_register();
-			new_Id_Ex.first_reg = first_register();
-			new_Id_Ex.op_A = registers->read(second_register());
-			break;
-		}
-		case 2: //B BRANCH
-		{
-			int8_t label_offset =0;
-			label_offset = signed_immediate(third_register());
-			pc--;
-			pc += label_offset;
-			break;
-		}
-		case 3: //BEQZ BRACH IF EQUAL TO ZERO
-		{
-			int8_t label_offset = 0;
-			instruction first_regist_value = registers->read(first_register());
-			if (first_regist_value  == 0)
+			read_operands_buffer[k].used == true;
+			switch(read_operands_buffer[k].op)
 			{
-				label_offset = signed_immediate(third_register());
-				pc--;
-				pc += label_offset;
+				case 0:
+				{
+					//Nop
+					cout << "Error: There should not be a NOP in the read operands stage. Make it stop!" << endl;
+					cout << "PC: " << std::hex << pc << endl;
+					cout << "Current Istruction: " <<std::hex << *current_instruction << endl;
+					//more_instructions = false;
+					break;
+					break;
+				}
+				case 1: //ADDI ADD IMMEDIATE
+				{
+					read_operands_buffer[k].op_A = registers->read(read_operands_buffer[k].second_reg_name);
+					break;
+				}
+				case 2: //B BRANCH
+				{
+					//Do nothing
+					break;
+				}
+				case 3: //BEQZ BRACH IF EQUAL TO ZERO
+				{
+					read_operands_buffer[k].op_A = registers->read(read_operands_buffer[k].first_reg_name);
+					break;
+				}
+				case 4: //BGE BRANCH IF GREATER OR EQUAL $t0,$t1,target,  $t0 >= $t1
+				{
+					read_operands_buffer[k].op_A = registers->read(read_operands_buffer[k].first_reg_name);
+					read_operands_buffer[k].op_B = registers->read(read_operands_buffer[k].second_reg_name);
+					break;
+				}
+				case 5: //BNE BRANCH IF NOT EQUAL  $t0,$t1,target, $t0 <> $t1
+				{
+					read_operands_buffer[k].op_A = registers->read(read_operands_buffer[k].first_reg_name);
+					read_operands_buffer[k].op_B = registers->read(read_operands_buffer[k].second_reg_name);
+					break;
+				}
+				case 6: //LA LOAD ADDRESS
+				{
+					//Do nothing
+					break;
+				}
+				case 7: //LB LOAD BYTE
+				{
+					read_operands_buffer[k].op_A = registers->read(read_operands_buffer[k].second_reg_name);//number of bytes
+					break;
+				}
+				case 8: //LI LOAD IMMEDIATE
+				{
+					//Do nothing
+					break;
+				}
+				case 9: //SUBI SUBTRACT IMMEDIATE
+				{
+					read_operands_buffer[k].op_A = registers->read(read_operands_buffer[k].second_reg_name);
+					break;
+				}
+				case 10: //SYSCALL
+				{
+					read_operands_buffer[k].op_B = registers->read(read_operands_buffer[k].second_reg_name);
+					switch(read_operands_buffer[k].op_B)
+					{
+						case 1:
+						{
+							read_operands_buffer[k].op_A = registers->read(read_operands_buffer[k].first_reg_name);
+							break;
+						}
+						case 4:	//Print String
+						{
+							read_operands_buffer[k].op_A = registers->read(read_operands_buffer[k].first_reg_name);
+							break;
+						}
+						case 8:	//Read String In
+						{
+							read_operands_buffer[k].op_A = registers->read(read_operands_buffer[k].first_reg_name);
+							break;
+						}
+						case 10:// End Program
+						{
+							break;
+						}
+						default:
+						{
+							break;
+						}
+					}
+					break;
+				}
+				case 11:	//FADD - add two floats
+				{
+					read_operands_buffer[k].float_op_A = floating_registers->read(read_operands_buffer[k].second_reg_name);
+					read_operands_buffer[k].float_op_B = floating_registers->read(read_operands_buffer[k].third_reg_name);
+					break;
+				}
+				case 12:	//FMUL - multiply two floats
+				{
+					read_operands_buffer[k].float_op_A = floating_registers->read(read_operands_buffer[k].second_reg_name);
+					read_operands_buffer[k].float_op_B = floating_registers->read(read_operands_buffer[k].third_reg_name);
+					break;
+				}
+				case 13:  //FSUB
+				{
+					read_operands_buffer[k].float_op_A = floating_registers->read(read_operands_buffer[k].second_reg_name);
+					read_operands_buffer[k].float_op_B = floating_registers->read(read_operands_buffer[k].third_reg_name);
+					break;
+				}
+				case 14: // L.D load
+				{
+					read_operands_buffer[k].float_op_A = floating_registers->read(read_operands_buffer[k].second_reg_name);
+					break;
+				}
+				case 15: // S.D -- store
+				{
+					read_operands_buffer[k].float_op_A = floating_registers->read(read_operands_buffer[k].second_reg_name);
+					break;
+				}
+				case 16: // add
+				{
+					read_operands_buffer[k].op_A = registers->read(read_operands_buffer[k].second_reg_name);
+					read_operands_buffer[k].op_B = registers->read(read_operands_buffer[k].third_reg_name);
+					return INTEGER_ALU_ID;
+					break;
+				}
+				default:
+					cout << "Error: There was an error with reading operands" << endl;
+					cout << "PC: " << std::hex << read_operands_buffer[k].pc << endl;
+					cout << "Current Istruction: " << std::hex << read_operands_buffer[k].instruction << endl;
+					//more_instructions = false;
+					break;
 			}
-			break;
-		}
-		case 4: //BGE BRANCH IF GREATER OR EQUAL $t0,$t1,target,  $t0 >= $t1
-		{
-			instruction first_regist_value = registers->read(first_register());
-			instruction second_regist_value = registers->read(second_register());
-			if(first_register() == old_Ex_Mm.first_reg)
-			{
-				first_regist_value = old_Ex_Mm.alu_results;
-			}
-			if(first_register() == old_Mm_Wb.first_reg)
-			{
-				first_regist_value = old_Mm_Wb.alu_results;
-			}
-			if(second_register() == old_Ex_Mm.first_reg)
-			{
-				second_regist_value = old_Ex_Mm.alu_results;
-			}
-			if(second_register() == new_Ex_Mm.first_reg)
-			{
-				second_regist_value = new_Ex_Mm.alu_results;
-			}
-			if(second_register() == old_Mm_Wb.first_reg)
-			{
-				second_regist_value = old_Mm_Wb.alu_results;
-			}
-			int8_t label_offset = 0 ;
-			if ( first_regist_value >= second_regist_value )
-			{
-				label_offset = signed_immediate(third_register());
-				pc--;
-				pc += label_offset;
-			}
-			break;
-		}
-		case 5: //BNE BRANCH IF NOT EQUAL  $t0,$t1,target, $t0 <> $t1
-		{
-			instruction first_regist_value = registers->read(first_register());
-			instruction second_regist_value = registers->read(second_register());
-			if(second_register() == new_Ex_Mm.first_reg)
-			{
-				second_regist_value = mem->read_byte(new_Ex_Mm.alu_results, new_Ex_Mm.alu_results%4);
-			}
-			int8_t label_offset =0;
-			if ( first_regist_value  !=  second_regist_value)
-			{
-				label_offset = signed_immediate(third_register());
-				pc--;
-				pc += label_offset;
-			}
-			break;
-		}
-		case 6: //LA LOAD ADDRESS
-		{
-			new_Id_Ex.first_reg = first_register();
-			new_Id_Ex.op_A = immediate_value();
-			break;
-		}
-		case 7: //LB LOAD BYTE
-		{
-			new_Id_Ex.first_reg = first_register();
-			new_Id_Ex.second_reg = second_register();
-		 	new_Id_Ex.immediate = signed_immediate(third_register());
-			new_Id_Ex.op_A = registers->read(second_register());//number of bytes
-			break;
-		}
-		case 8: //LI LOAD IMMEDIATE
-		{
-			new_Id_Ex.first_reg = first_register();
-			new_Id_Ex.second_reg = second_register();
-			new_Id_Ex.op_A = second_register();
-			break;
-		}
-		case 9: //SUBI SUBTRACT IMMEDIATE
-		{
-			new_Id_Ex.immediate = signed_immediate(third_register());
-			new_Id_Ex.op_A = registers->read(second_register());
-			new_Id_Ex.second_reg = second_register();
-			old_Id_Ex.first_reg = first_register();
-			break;
-		}
-		case 10: //SYSCALL
-		{
-			new_Id_Ex.second_reg = 3;
-			new_Id_Ex.op_B = registers->read(3);
-			switch(new_Id_Ex.op_B)
+			struct instruction_struct updated_instruction = read_operands_buffer[k];
+			read_operands_buffer.erase(k);
+			k--;
+
+			//put instruction into functional units buffer, with clocks left
+			switch(scoreboard_current->functional_unit_id(updated_instruction.op))
 			{
 				case 1:
 				{
-					new_Id_Ex.first_reg = 1;
-					new_Id_Ex.op_A = registers->read(1);
+					updated_instruction.clocks_left = 1;
 					break;
 				}
-				case 4:	//Print String
+				case 2:
 				{
-					new_Id_Ex.first_reg = 1;
-					new_Id_Ex.op_A = registers->read(1);
+					updated_instruction.clocks_left = 1;
 					break;
 				}
-				case 8:	//Read String In
+				case 3:
 				{
-					new_Id_Ex.first_reg = 1;
-					new_Id_Ex.op_A = registers->read(1);
+					updated_instruction.clocks_left = 5;
 					break;
 				}
-				case 10:// End Program
+				case 4:
 				{
+					updated_instruction.clocks_left = 1;
 					break;
 				}
 				default:
 				{
+					cout << "Error: There was an error putting an instruciton into the functional unit buffer" << endl;
+					cout << "PC: " << std::hex << updated_instruction.pc << endl;
+					cout << "Current Istruction: " << std::hex << updated_instruction.instruction << endl;
+					//more_instructions = false;
 					break;
 				}
 			}
-			break;
+			instructions_in_functional_units.push_back(updated_instruction);
+
+			//update scoreboard
+			int j = 0;
+			while (j < scoreboard_current.instruction_status.size())
+			{
+				if(scoreboard_current.instruction_status[j].pc == updated_instruction.pc)
+				{
+					scoreboard_current.instruction_status[j].read = total_cycles_spent;
+				}
+			}
+
 		}
-		case 11:	//LOAD
-		{
-			cout << "Error: LOAD Instruction not implemented." << endl;
-			break;
-		}
-		case 12:	//STORE
-		{
-			cout << "Error: STORE Instruction not implemented." << endl;
-			break;
-		}
-		default:
-			cout << "Error: There was an error with the Decoding Stage." << endl;
-			cout << "PC: " << std::hex << pc << endl;
-			cout << "Current Istruction: " <<std::hex << *current_instruction << endl;
-			//more_instructions = false;
-			break;
+	k++;
 	}
 }
 
@@ -1032,7 +1049,7 @@ void Sim::populate_new_instruction()
 		case 12:
 		case 13:
 		{
-			new_instruction = {pc,instruction_op(),0,first_register(),second_register(), third_register(),0,0,0,0,0,0,0,0};
+			new_instruction = {pc,instruction_op(),0,first_register(),second_register(), third_register(),0,0,0,0,0,0,0,0,0,0,0};
 			break;
 		}
 		//two registers, one immediate
@@ -1044,7 +1061,7 @@ void Sim::populate_new_instruction()
 		case 14:
 		case 15:
 		{
-			new_instruction = {pc,instruction_op(),signed_immediate(third_register()),first_register(),second_register(),0,0,0,0,0,0,0,0,0};
+			new_instruction = {pc,instruction_op(),signed_immediate(third_register()),first_register(),second_register(),0,0,0,0,0,0,0,0,0,0,0,0};
 			break;
 		}
 		//one register, one immediate
@@ -1052,19 +1069,19 @@ void Sim::populate_new_instruction()
 		case 6:
 		case 8:
 		{
-			new_instruction = {pc,instruction_op(),immediate_value(),first_register(),0,0,0,0,0,0,0,0,0,0};
+			new_instruction = {pc,instruction_op(),immediate_value(),first_register(),0,0,0,0,0,0,0,0,0,0,0,0,0};
 			break;
 		}
 		// just immediate
 		case 2:
 		{
-			new_instruction = {pc,instruction_op(),signed_immediate(third_register()),0,0,0,0,0,0,0,0,0,0,0};
+			new_instruction = {pc,instruction_op(),signed_immediate(third_register()),0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 			break;
 		}
 		// syscall
 		case 10:
 		{
-			new_instruction = {pc,instruction_op(),0,1,3,0,0,0,0,0,0,0,0,0};
+			new_instruction = {pc,instruction_op(),0,1,3,0,0,0,0,0,0,0,0,0,0,0,0};
 			break;
 		}
 		default:
